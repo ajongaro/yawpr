@@ -1,0 +1,26 @@
+{
+  "name": "mi-fire",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "wrangler d1 migrations apply mi-fire-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply mi-fire-db --remote",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.7.6",
+    "better-auth": "^1.5.5",
+    "drizzle-orm": "^0.45.1",
+    "hono": "^4.12.7",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260313.1",
+    "drizzle-kit": "^0.31.9",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.73.0"
+  }
+}

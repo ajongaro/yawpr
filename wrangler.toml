@@ -1,0 +1,25 @@
+name = "mi-fire"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+APP_URL = "https://mi-fire.aongaro.workers.dev"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mi-fire-db"
+database_id = "34940ca0-e763-463a-ac57-cdd4163561ac"
+migrations_dir = "src/db/migrations"
+
+[[queues.producers]]
+binding = "NOTIFICATION_QUEUE"
+queue = "mi-fire-notifications"
+
+[[queues.consumers]]
+queue = "mi-fire-notifications"
+max_batch_size = 10
+max_retries = 3
+
+[assets]
+directory = "public"
