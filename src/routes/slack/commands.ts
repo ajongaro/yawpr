@@ -7,6 +7,7 @@ import { teams } from "../../db/schema";
 import { createIncident } from "../../services/incident";
 import { decryptSecret } from "../../lib/crypto";
 import { SEVERITY_EMOJI } from "../../lib/constants";
+import { openSetupWizard } from "./setup-wizard";
 
 const slackCommands = new Hono<Env>();
 
@@ -15,11 +16,30 @@ slackCommands.use("/*", slackVerify);
 slackCommands.post("/", async (c) => {
   const rawBody = c.get("rawBody");
   const params = new URLSearchParams(rawBody);
-  const text = params.get("text") || "";
+  const text = (params.get("text") || "").trim();
   const userId = params.get("user_id") || "";
+  const triggerId = params.get("trigger_id") || "";
 
   const installation = c.get("slackInstallation");
   const orgId = installation.orgId;
+
+  // /yawp setup — open the setup wizard modal
+  if (text.toLowerCase() === "setup") {
+    const botToken = await decryptSecret(
+      installation.botToken,
+      c.env.ENCRYPTION_KEY
+    );
+    await openSetupWizard(botToken, triggerId, orgId);
+    return c.json({ response_type: "ephemeral", text: "Opening setup wizard..." });
+  }
+
+  // /yawp (no args) — show help
+  if (!text) {
+    return c.json({
+      response_type: "ephemeral",
+      text: "*Usage:*\n`/yawp setup` — Set up a new team\n`/yawp <fire|warning|info> @<team> <message>` — Trigger an incident\n\nExample: `/yawp fire @backend DB is down`",
+    });
+  }
 
   // Parse: <severity> <team-slug> <title>
   const match = text.match(/^(fire|warning|info)\s+@?(\S+)\s+(.+)$/i);

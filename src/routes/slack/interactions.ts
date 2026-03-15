@@ -8,6 +8,8 @@ import {
   acknowledgeIncident,
   resolveIncident,
 } from "../../services/incident";
+import { decryptSecret } from "../../lib/crypto";
+import { handleTeamCreated, handleMembersSelected } from "./setup-wizard";
 
 const slackInteractions = new Hono<Env>();
 
@@ -20,14 +22,67 @@ slackInteractions.post("/", async (c) => {
   if (!payloadStr) return c.json({ error: "No payload" }, 400);
 
   const payload = JSON.parse(payloadStr);
+  const installation = c.get("slackInstallation");
+  const db = getDb(c.env.DB);
+
+  // ─── Modal submissions (setup wizard) ─────────────────
+  if (payload.type === "view_submission") {
+    const callbackId = payload.view?.callback_id;
+    const metadata = JSON.parse(payload.view?.private_metadata || "{}");
+    const botToken = await decryptSecret(
+      installation.botToken,
+      c.env.ENCRYPTION_KEY
+    );
+
+    if (callbackId === "setup_wizard_team") {
+      const teamName =
+        payload.view.state.values.team_name.value.value;
+
+      return c.json(
+        await handleTeamCreated(
+          botToken,
+          payload.view.id,
+          metadata.orgId,
+          teamName,
+          db
+        )
+      );
+    }
+
+    if (callbackId === "setup_wizard_members") {
+      const selectedUsers: string[] =
+        payload.view.state.values.team_members.value.selected_users || [];
+
+      if (selectedUsers.length === 0) {
+        return c.json({
+          response_action: "errors",
+          errors: { team_members: "Select at least one team member." },
+        });
+      }
+
+      return c.json(
+        await handleMembersSelected(
+          botToken,
+          metadata.orgId,
+          metadata.teamId,
+          metadata.teamName,
+          selectedUsers,
+          payload.user.id,
+          db
+        )
+      );
+    }
+
+    return c.json({ ok: true });
+  }
+
+  // ─── Button actions (incident ack/resolve) ────────────
   const action = payload.actions?.[0];
-  if (!action) return c.json({ error: "No action" }, 400);
+  if (!action) return c.json({ ok: true });
 
   const incidentId = action.value;
   const slackUserId = payload.user?.id || "";
-  const installation = c.get("slackInstallation");
   const orgId = installation.orgId;
-  const db = getDb(c.env.DB);
 
   // Resolve actor from Slack user ID
   const [member] = await db
