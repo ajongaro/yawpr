@@ -174,7 +174,7 @@ export async function handleMembersSelected(
     await sendSlackDM(
       botToken,
       m.slackUserId,
-      `You've been added to Yawpr team *${teamName}*! When incidents hit, you'll get a Slack DM — but to also get push notifications on your phone:\n\n1. Download the *ntfy app*: <https://ntfy.sh|ntfy.sh> (iOS + Android)\n2. Open the app and tap *+* to subscribe\n3. Enter your personal topic: \`${m.ntfyTopic}\`\n\nThat's it — fire-level alerts will bypass Do Not Disturb.`
+      `You've been added to Yawpr team *${teamName}*! When incidents hit, you'll get a Slack DM — but to also get push notifications on your phone:\n\n*Setup (2 min):*\n1. Download the *ntfy app*: <https://ntfy.sh|ntfy.sh> (iOS + Android)\n2. Open the app and tap *+* to subscribe\n3. Enter your personal topic: \`${m.ntfyTopic}\`\n\n*Enable DND bypass (important!):*\n• *iPhone*: Settings → ntfy → Notifications → turn on *Time Sensitive Notifications*\n• *Android*: Settings → Apps → ntfy → Notifications → set to *Urgent*. Then Settings → Do Not Disturb → Exceptions → allow ntfy\n\nWithout this step, fire alerts won't wake you up.`
     );
   }
 

@@ -194,9 +194,25 @@ export const DocsPage: FC = () => {
             <li>Open the app, tap <strong>+</strong></li>
             <li>Enter your personal topic (sent to you in the DM)</li>
           </ol>
+
+          <h3>Enable DND Bypass</h3>
           <p>
-            That's it. Fire-severity alerts will bypass Do Not Disturb and
-            make noise even if your phone is on silent.
+            Yawpr sends fire alerts at ntfy priority 5, but your phone
+            needs to be configured to let them through Do Not Disturb:
+          </p>
+          <ul>
+            <li>
+              <strong>iPhone</strong>: Settings → ntfy → Notifications →
+              turn on <strong>Time Sensitive Notifications</strong>
+            </li>
+            <li>
+              <strong>Android</strong>: Settings → Apps → ntfy →
+              Notifications → set channel to <strong>Urgent</strong>.
+              Then Settings → Do Not Disturb → Exceptions → allow ntfy.
+            </li>
+          </ul>
+          <p>
+            Without this step, fire alerts will arrive silently during DND.
           </p>
 
           <h2 id="webhooks">Webhook Ingestion</h2>

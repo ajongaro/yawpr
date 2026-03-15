@@ -139,7 +139,7 @@ slackInteractions.post("/", async (c) => {
         await sendSlackDM(
           botToken,
           slackUserId,
-          `You've been added to a Yawpr team! To get push notifications:\n\n1. Download the *ntfy app*: <https://ntfy.sh|ntfy.sh>\n2. Subscribe to your topic: \`${ntfyTopic}\`\n\nFire-level alerts will bypass Do Not Disturb.`
+          `You've been added to a Yawpr team! To get push notifications:\n\n*Setup:*\n1. Download the *ntfy app*: <https://ntfy.sh|ntfy.sh>\n2. Subscribe to your topic: \`${ntfyTopic}\`\n\n*Enable DND bypass:*\n• *iPhone*: Settings → ntfy → Notifications → turn on *Time Sensitive Notifications*\n• *Android*: Settings → Apps → ntfy → Notifications → set to *Urgent*, then allow ntfy in Do Not Disturb exceptions\n\nWithout this step, fire alerts won't wake you up.`
         );
 
         added.push(`<@${slackUserId}>`);
