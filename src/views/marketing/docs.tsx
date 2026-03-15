@@ -144,6 +144,11 @@ export const DocsPage: FC = () => {
             CloudWatch/SNS, Datadog, and generic JSON.
           </p>
           <p>
+            Each webhook source is routed to a team you choose — point it
+            at your on-call team to get the escalation flow, or at the
+            full team to page everyone directly.
+          </p>
+          <p>
             Each source gets a unique URL with HMAC-SHA256 verification.
             The signing secret is shown once at creation — copy it then.
             Duplicate alerts are automatically deduplicated by alarm name
