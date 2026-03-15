@@ -23,20 +23,47 @@ export async function authGuard(c: Context<Env>, next: Next) {
     c.set("session", session.session as Env["Variables"]["session"]);
 
     // Extract org context from session
-    const activeOrgId = (session.session as any).activeOrganizationId;
+    let activeOrgId = (session.session as any).activeOrganizationId;
+
     if (!activeOrgId) {
-      // No active org — redirect to onboarding (unless already there)
-      if (
-        !c.req.path.startsWith("/app/onboarding") &&
-        !c.req.path.startsWith("/api/auth")
-      ) {
-        if (c.req.header("Accept")?.includes("application/json")) {
-          return c.json({ error: "No active organization" }, 403);
+      // No active org — try to auto-join an existing one
+      const db = getDb(c.env.DB);
+      const [existingOrg] = await db.select().from(organizations).limit(1);
+
+      if (existingOrg) {
+        // Org exists — add user as member and set active
+        try {
+          await auth.api.addMember({
+            body: {
+              organizationId: existingOrg.id,
+              userId: session.user.id,
+              role: "member",
+            },
+          });
+        } catch {
+          // Already a member — that's fine
         }
-        return c.redirect("/app/onboarding");
+
+        await auth.api.setActiveOrganization({
+          body: { organizationId: existingOrg.id },
+          headers: c.req.raw.headers,
+        });
+
+        activeOrgId = existingOrg.id;
+      } else {
+        // No org exists yet — first user needs to create one via onboarding
+        if (
+          !c.req.path.startsWith("/app/onboarding") &&
+          !c.req.path.startsWith("/api/auth")
+        ) {
+          if (c.req.header("Accept")?.includes("application/json")) {
+            return c.json({ error: "No active organization" }, 403);
+          }
+          return c.redirect("/app/onboarding");
+        }
+        await next();
+        return;
       }
-      await next();
-      return;
     }
 
     // Fetch org from our domain table
@@ -47,7 +74,6 @@ export async function authGuard(c: Context<Env>, next: Next) {
       .where(eq(organizations.id, activeOrgId));
 
     if (!org) {
-      // Org exists in Better Auth but not in our domain table — redirect to onboarding
       if (c.req.header("Accept")?.includes("application/json")) {
         return c.json({ error: "Organization not found" }, 403);
       }

@@ -23,7 +23,6 @@ export const MarketingLayout: FC<MarketingLayoutProps> = ({
             <a href="/">Yawp'r</a>
           </div>
           <div class="nav-links">
-            <a href="/about">About</a>
             <a href="/pricing">Pricing</a>
             <a href="/docs">Docs</a>
             <a href="/app/login" class="btn btn-sm btn-primary">
@@ -34,21 +33,7 @@ export const MarketingLayout: FC<MarketingLayoutProps> = ({
         <main>{children}</main>
         <footer class="marketing-footer">
           <div class="container">
-            <div class="footer-grid">
-              <div>
-                <strong>Yawp'r</strong>
-                <p class="text-muted">Dev team alerting platform.</p>
-              </div>
-              <div>
-                <strong>Product</strong>
-                <a href="/pricing">Pricing</a>
-                <a href="/docs">Documentation</a>
-              </div>
-              <div>
-                <strong>Company</strong>
-                <a href="/about">About</a>
-              </div>
-            </div>
+            <p class="text-muted">Yawp'r — Dev team alerting.</p>
           </div>
         </footer>
       </body>
