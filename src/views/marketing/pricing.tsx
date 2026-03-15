@@ -47,11 +47,9 @@ export const PricingPage: FC = () => {
                 <li>Custom webhook parsers</li>
                 <li>Anthony personally flies to each dev's home to hand-deliver a wax-sealed incident report</li>
               </ul>
-              <form method="post" action="/api/checkout">
-                <button type="submit" class="btn btn-primary btn-lg pricing-cta">
-                  Subscribe
-                </button>
-              </form>
+              <a href="mailto:hello@yawpr.dev" class="btn btn-primary btn-lg pricing-cta">
+                Contact Sales
+              </a>
             </div>
           </div>
         </div>
