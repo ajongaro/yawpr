@@ -1,13 +1,13 @@
 {
-  "name": "mi-fire",
-  "version": "1.0.0",
-  "description": "",
+  "name": "yawpr",
+  "version": "2.0.0",
+  "description": "Dev team alerting platform",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "wrangler d1 migrations apply mi-fire-db --local",
-    "db:migrate:remote": "wrangler d1 migrations apply mi-fire-db --remote",
+    "db:migrate": "wrangler d1 migrations apply yawpr-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply yawpr-db --remote",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

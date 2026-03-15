@@ -4,27 +4,30 @@ type LayoutProps = {
   title?: string;
   children: any;
   user?: { name: string; email: string } | null;
+  orgName?: string;
 };
 
-export const Layout: FC<LayoutProps> = ({ title, children, user }) => {
+export const Layout: FC<LayoutProps> = ({ title, children, user, orgName }) => {
   return (
     <html lang="en">
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{title ? `${title} — mi-fire` : "mi-fire"}</title>
+        <title>{title ? `${title} — Yawp'r` : "Yawp'r"}</title>
         <link rel="stylesheet" href="/static/styles.css" />
       </head>
       <body>
         <nav class="nav">
           <div class="nav-brand">
-            <a href="/">🔥 mi-fire</a>
+            <a href="/app">Yawp'r</a>
+            {orgName && <span class="nav-org">{orgName}</span>}
           </div>
           <div class="nav-links">
-            <a href="/">Dashboard</a>
-            <a href="/alerts">Alerts</a>
-            <a href="/teams">Teams</a>
-            <a href="/schedules">Schedules</a>
+            <a href="/app">Home</a>
+            <a href="/app/teams">Teams</a>
+            <a href="/app/schedules">Schedules</a>
+            <a href="/app/incidents">History</a>
+            <a href="/app/settings">Settings</a>
             {user ? (
               <span class="nav-user">
                 {user.name}
@@ -33,7 +36,7 @@ export const Layout: FC<LayoutProps> = ({ title, children, user }) => {
                 </a>
               </span>
             ) : (
-              <a href="/login" class="btn btn-sm btn-primary">
+              <a href="/app/login" class="btn btn-sm btn-primary">
                 Sign in
               </a>
             )}

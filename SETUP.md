@@ -1,4 +1,4 @@
-# mi-fire Setup Guide
+# yawpr Setup Guide
 
 ## Prerequisites
 - [Cloudflare account](https://dash.cloudflare.com) with Workers paid plan (needed for Queues)
@@ -17,11 +17,11 @@ npx wrangler secret put BETTER_AUTH_SECRET
 ## 2. Create a Slack App
 
 1. Go to https://api.slack.com/apps and click **Create New App** → **From scratch**
-2. Name it `mi-fire` and select your workspace
+2. Name it `yawpr` and select your workspace
 
 ### OAuth & Permissions
 Under **OAuth & Permissions**:
-- Add redirect URL: `https://mi-fire.aongaro.workers.dev/api/auth/callback/slack`
+- Add redirect URL: `https://yawpr.aongaro.workers.dev/api/auth/callback/slack`
 - Add Bot Token Scopes:
   - `chat:write` — send DMs
   - `users:read` — read user info
@@ -31,14 +31,14 @@ Under **OAuth & Permissions**:
 ### Slash Commands
 Under **Slash Commands**, create:
 - Command: `/fire`
-- Request URL: `https://mi-fire.aongaro.workers.dev/slack/commands`
+- Request URL: `https://yawpr.aongaro.workers.dev/slack/commands`
 - Description: `Trigger a fire alert`
 - Usage hint: `<fire|info> @<team-name> <title>`
 
 ### Interactivity
 Under **Interactivity & Shortcuts**:
 - Toggle **On**
-- Request URL: `https://mi-fire.aongaro.workers.dev/slack/interactions`
+- Request URL: `https://yawpr.aongaro.workers.dev/slack/interactions`
 
 ### Install to Workspace
 - Go to **Install App** and click **Install to Workspace**
@@ -79,7 +79,7 @@ npm run deploy
 
 ## 6. Verify
 
-1. Visit https://mi-fire.aongaro.workers.dev — you should see the login page
+1. Visit https://yawpr.aongaro.workers.dev — you should see the login page
 2. Click "Sign in with Slack" — complete the OAuth flow
 3. Create a team, add members with Slack user IDs and/or ntfy topics
 4. Set up an on-call schedule
@@ -104,7 +104,7 @@ npm run dev
 Each team member who wants push notifications:
 
 1. Install the [ntfy app](https://ntfy.sh) on their phone/desktop
-2. Subscribe to their team's topic (e.g. `mi-fire-backend`)
+2. Subscribe to their team's topic (e.g. `yawpr-backend`)
 3. Add their personal ntfy topic in the team member settings
 
 Severity mapping:

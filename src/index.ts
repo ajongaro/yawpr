@@ -3,11 +3,15 @@ import type { Env } from "./lib/types";
 import type { NotificationMessage } from "./lib/types";
 import { errorHandler } from "./middleware/error-handler";
 import { authRoutes } from "./routes/auth/index";
-import { alertsApi } from "./routes/api/alerts";
+import { incidentsApi } from "./routes/api/incidents";
 import { teamsApi } from "./routes/api/teams";
 import { schedulesApi } from "./routes/api/schedules";
-import { slackRoutes } from "./routes/slack/index";
-import { dashboard } from "./routes/dashboard";
+import { slackInstall } from "./routes/slack/install";
+import { slackCommands } from "./routes/slack/commands";
+import { slackInteractions } from "./routes/slack/interactions";
+import { webhookIngest } from "./routes/webhooks/ingest";
+import { marketing } from "./routes/marketing";
+import { pages } from "./routes/pages";
 import { authGuard } from "./middleware/auth";
 import { handleNotificationQueue } from "./queue/consumer";
 
@@ -16,22 +20,30 @@ const app = new Hono<Env>();
 // Global error handler
 app.use("*", errorHandler);
 
+// ─── Marketing pages (public) ────────────────────────────
+app.route("/", marketing);
+
 // ─── Auth (Better Auth handles /api/auth/*) ──────────────
 app.route("/api/auth", authRoutes);
 
 // ─── API routes (protected) ─────────────────────────────
 app.use("/api/teams/*", authGuard);
-app.use("/api/alerts/*", authGuard);
+app.use("/api/incidents/*", authGuard);
 app.use("/api/schedules/*", authGuard);
 app.route("/api/teams", teamsApi);
-app.route("/api/alerts", alertsApi);
+app.route("/api/incidents", incidentsApi);
 app.route("/api/schedules", schedulesApi);
 
-// ─── Slack routes (verified via HMAC) ────────────────────
-app.route("/slack", slackRoutes);
+// ─── Slack routes (commands/interactions before install — install has authGuard wildcard)
+app.route("/slack/commands", slackCommands);
+app.route("/slack/interactions", slackInteractions);
+app.route("/slack", slackInstall);
 
-// ─── Dashboard (SSR pages) ──────────────────────────────
-app.route("/", dashboard);
+// ─── Webhook ingestion (public, verified via HMAC) ──────
+app.route("/webhooks", webhookIngest);
+
+// ─── App (authenticated dashboard) ──────────────────────
+app.route("/app", pages);
 
 // ─── Worker export ───────────────────────────────────────
 export default {

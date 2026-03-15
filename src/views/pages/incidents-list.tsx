@@ -2,7 +2,7 @@ import type { FC } from "hono/jsx";
 import { Layout } from "../layout";
 import { AlertCard } from "../components/alert-card";
 
-type Alert = {
+type Incident = {
   id: string;
   title: string;
   severity: string;
@@ -11,65 +11,68 @@ type Alert = {
   teamName?: string;
 };
 
-type AlertsListPageProps = {
+type IncidentsListPageProps = {
   user: any;
-  alerts: Alert[];
+  orgName: string;
+  incidents: Incident[];
   currentFilter: string;
 };
 
-export const AlertsListPage: FC<AlertsListPageProps> = ({
+export const IncidentsListPage: FC<IncidentsListPageProps> = ({
   user,
-  alerts,
+  orgName,
+  incidents,
   currentFilter,
 }) => {
   return (
-    <Layout title="Alerts" user={user}>
+    <Layout title="Incidents" user={user} orgName={orgName}>
       <div class="page-header">
-        <h1>Alerts</h1>
-        <a href="/alerts/new" class="btn btn-primary">
-          🚨 Trigger Alert
+        <h1>Incidents</h1>
+        <a href="/app/incidents/new" class="btn btn-primary">
+          Trigger Incident
         </a>
       </div>
 
       <div class="filters">
         <a
-          href="/alerts"
+          href="/app/incidents"
           class={`filter-btn ${currentFilter === "all" ? "active" : ""}`}
         >
           All
         </a>
         <a
-          href="/alerts?status=active"
+          href="/incidents?status=active"
           class={`filter-btn ${currentFilter === "active" ? "active" : ""}`}
         >
           Active
         </a>
         <a
-          href="/alerts?status=acknowledged"
+          href="/incidents?status=acknowledged"
           class={`filter-btn ${currentFilter === "acknowledged" ? "active" : ""}`}
         >
           Acknowledged
         </a>
         <a
-          href="/alerts?status=resolved"
+          href="/incidents?status=resolved"
           class={`filter-btn ${currentFilter === "resolved" ? "active" : ""}`}
         >
           Resolved
         </a>
       </div>
 
-      {alerts.length === 0 ? (
-        <p class="empty-state">No alerts found.</p>
+      {incidents.length === 0 ? (
+        <p class="empty-state">No incidents found.</p>
       ) : (
         <div class="alert-grid">
-          {alerts.map((alert) => (
+          {incidents.map((incident) => (
             <AlertCard
-              id={alert.id}
-              title={alert.title}
-              severity={alert.severity}
-              status={alert.status}
-              createdAt={alert.createdAt}
-              teamName={alert.teamName}
+              id={incident.id}
+              title={incident.title}
+              severity={incident.severity}
+              status={incident.status}
+              createdAt={incident.createdAt}
+              teamName={incident.teamName}
+              basePath="/app/incidents"
             />
           ))}
         </div>

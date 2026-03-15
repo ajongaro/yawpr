@@ -1,0 +1,49 @@
+{
+  "display_information": {
+    "name": "Yawpr",
+    "description": "Dev team alerting — for when fires happen.",
+    "background_color": "#6366f1"
+  },
+  "features": {
+    "bot_user": {
+      "display_name": "Yawpr",
+      "always_online": true
+    },
+    "slash_commands": [
+      {
+        "command": "/yawp",
+        "url": "https://yawpr.dev/slack/commands",
+        "description": "Trigger an incident for your team",
+        "usage_hint": "fire @backend Database is down",
+        "should_escape": false
+      }
+    ]
+  },
+  "oauth_config": {
+    "redirect_urls": [
+      "https://yawpr.dev/api/auth/callback/slack",
+      "https://yawpr.dev/slack/oauth/callback"
+    ],
+    "scopes": {
+      "bot": [
+        "chat:write",
+        "commands",
+        "im:write",
+        "users:read",
+        "channels:read",
+        "groups:read"
+      ],
+      "user": ["openid", "profile", "email"]
+    }
+  },
+  "settings": {
+    "interactivity": {
+      "is_enabled": true,
+      "request_url": "https://yawpr.dev/slack/interactions"
+    },
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": false,
+    "is_hosted": false,
+    "token_rotation_enabled": false
+  }
+}

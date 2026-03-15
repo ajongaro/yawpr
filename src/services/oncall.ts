@@ -1,23 +1,28 @@
 import { and, lte, gte, eq } from "drizzle-orm";
 import type { Database } from "../db/client";
-import { onCallSchedules, teamMembers } from "../db/schema";
+import { schedules, members } from "../db/schema";
 
-/** Find who's currently on-call for a given team */
-export async function getOnCall(db: Database, teamId: string) {
+/** Find who's currently on-call for a given team within an org */
+export async function getOnCall(
+  db: Database,
+  orgId: string,
+  teamId: string
+) {
   const now = new Date();
 
   const results = await db
     .select({
-      schedule: onCallSchedules,
-      member: teamMembers,
+      schedule: schedules,
+      member: members,
     })
-    .from(onCallSchedules)
-    .innerJoin(teamMembers, eq(onCallSchedules.memberId, teamMembers.id))
+    .from(schedules)
+    .innerJoin(members, eq(schedules.memberId, members.id))
     .where(
       and(
-        eq(onCallSchedules.teamId, teamId),
-        lte(onCallSchedules.startTime, now),
-        gte(onCallSchedules.endTime, now)
+        eq(schedules.orgId, orgId),
+        eq(schedules.teamId, teamId),
+        lte(schedules.startTime, now),
+        gte(schedules.endTime, now)
       )
     )
     .limit(1);

@@ -3,7 +3,8 @@ import { Layout } from "../layout";
 
 type Member = {
   id: string;
-  userId: string;
+  displayName: string;
+  userId: string | null;
   slackUserId: string | null;
   ntfyTopic: string | null;
   role: string;
@@ -12,32 +13,34 @@ type Member = {
 type Team = {
   id: string;
   name: string;
+  slug: string;
   slackChannelId: string | null;
-  ntfyTopic: string | null;
 };
 
 type TeamDetailPageProps = {
   user: any;
+  orgName: string;
   team: Team;
   members: Member[];
 };
 
 export const TeamDetailPage: FC<TeamDetailPageProps> = ({
   user,
+  orgName,
   team,
   members,
 }) => {
   return (
-    <Layout title={team.name} user={user}>
+    <Layout title={team.name} user={user} orgName={orgName}>
       <h1>Team: {team.name}</h1>
 
       <div class="card">
         <h2>Details</h2>
         <dl>
+          <dt>Slug</dt>
+          <dd>@{team.slug}</dd>
           <dt>Slack Channel</dt>
           <dd>{team.slackChannelId || "Not set"}</dd>
-          <dt>ntfy Topic</dt>
-          <dd>{team.ntfyTopic || "Not set"}</dd>
         </dl>
       </div>
 
@@ -45,13 +48,13 @@ export const TeamDetailPage: FC<TeamDetailPageProps> = ({
         <h2>Members ({members.length})</h2>
         <form
           method="post"
-          action={`/teams/${team.id}/members`}
+          action={`/app/teams/${team.id}/members`}
           class="form form-inline"
         >
           <input
             type="text"
-            name="userId"
-            placeholder="User ID"
+            name="displayName"
+            placeholder="Display name"
             required
           />
           <input
@@ -79,7 +82,7 @@ export const TeamDetailPage: FC<TeamDetailPageProps> = ({
           <table class="table">
             <thead>
               <tr>
-                <th>User ID</th>
+                <th>Name</th>
                 <th>Slack ID</th>
                 <th>ntfy Topic</th>
                 <th>Role</th>
@@ -89,14 +92,14 @@ export const TeamDetailPage: FC<TeamDetailPageProps> = ({
             <tbody>
               {members.map((m) => (
                 <tr>
-                  <td>{m.userId}</td>
+                  <td>{m.displayName}</td>
                   <td>{m.slackUserId || "—"}</td>
                   <td>{m.ntfyTopic || "—"}</td>
                   <td>{m.role}</td>
                   <td>
                     <form
                       method="post"
-                      action={`/teams/${team.id}/members/${m.id}/delete`}
+                      action={`/app/teams/${team.id}/members/${m.id}/delete`}
                     >
                       <button type="submit" class="btn btn-sm btn-danger">
                         Remove

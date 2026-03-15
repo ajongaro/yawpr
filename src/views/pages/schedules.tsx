@@ -9,7 +9,7 @@ type Schedule = {
   };
   member: {
     id: string;
-    userId: string;
+    displayName: string;
   };
 };
 
@@ -20,12 +20,13 @@ type Team = {
 
 type Member = {
   id: string;
-  userId: string;
+  displayName: string;
   teamId: string;
 };
 
 type SchedulesPageProps = {
   user: any;
+  orgName: string;
   teams: Team[];
   schedules: Schedule[];
   members: Member[];
@@ -33,15 +34,16 @@ type SchedulesPageProps = {
 
 export const SchedulesPage: FC<SchedulesPageProps> = ({
   user,
+  orgName,
   teams,
   schedules,
   members,
 }) => {
   return (
-    <Layout title="Schedules" user={user}>
+    <Layout title="Schedules" user={user} orgName={orgName}>
       <h1>On-Call Schedules</h1>
 
-      <form method="post" action="/schedules" class="form">
+      <form method="post" action="/app/schedules" class="form">
         <div class="form-row">
           <div class="form-group">
             <label for="teamId">Team</label>
@@ -57,17 +59,27 @@ export const SchedulesPage: FC<SchedulesPageProps> = ({
             <select name="memberId" id="memberId" required>
               <option value="">Select member...</option>
               {members.map((m) => (
-                <option value={m.id}>{m.userId}</option>
+                <option value={m.id}>{m.displayName}</option>
               ))}
             </select>
           </div>
           <div class="form-group">
             <label for="startTime">Start</label>
-            <input type="datetime-local" name="startTime" id="startTime" required />
+            <input
+              type="datetime-local"
+              name="startTime"
+              id="startTime"
+              required
+            />
           </div>
           <div class="form-group">
             <label for="endTime">End</label>
-            <input type="datetime-local" name="endTime" id="endTime" required />
+            <input
+              type="datetime-local"
+              name="endTime"
+              id="endTime"
+              required
+            />
           </div>
         </div>
         <button type="submit" class="btn btn-primary">
@@ -90,7 +102,7 @@ export const SchedulesPage: FC<SchedulesPageProps> = ({
           <tbody>
             {schedules.map((s) => (
               <tr>
-                <td>{s.member.userId}</td>
+                <td>{s.member.displayName}</td>
                 <td>
                   {typeof s.schedule.startTime === "string"
                     ? s.schedule.startTime
@@ -104,7 +116,7 @@ export const SchedulesPage: FC<SchedulesPageProps> = ({
                 <td>
                   <form
                     method="post"
-                    action={`/schedules/${s.schedule.id}/delete`}
+                    action={`/app/schedules/${s.schedule.id}/delete`}
                   >
                     <button type="submit" class="btn btn-sm btn-danger">
                       Delete

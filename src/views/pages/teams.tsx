@@ -4,39 +4,43 @@ import { Layout } from "../layout";
 type Team = {
   id: string;
   name: string;
+  slug: string;
   slackChannelId: string | null;
-  ntfyTopic: string | null;
 };
 
 type TeamsPageProps = {
   user: any;
+  orgName: string;
   teams: Team[];
 };
 
-export const TeamsPage: FC<TeamsPageProps> = ({ user, teams }) => {
+export const TeamsPage: FC<TeamsPageProps> = ({ user, orgName, teams }) => {
   return (
-    <Layout title="Teams" user={user}>
+    <Layout title="Teams" user={user} orgName={orgName}>
       <div class="page-header">
         <h1>Teams</h1>
       </div>
 
-      <form method="post" action="/teams" class="form form-inline">
+      <form method="post" action="/app/teams" class="form form-inline">
         <input
           type="text"
           name="name"
-          placeholder="New team name"
+          placeholder="Team name"
           required
           maxlength={100}
         />
         <input
           type="text"
-          name="slackChannelId"
-          placeholder="Slack channel ID (optional)"
+          name="slug"
+          placeholder="team-slug"
+          required
+          maxlength={50}
+          pattern="[a-z0-9-]+"
         />
         <input
           type="text"
-          name="ntfyTopic"
-          placeholder="ntfy topic (optional)"
+          name="slackChannelId"
+          placeholder="Slack channel ID (optional)"
         />
         <button type="submit" class="btn btn-primary">
           Create Team
@@ -50,8 +54,8 @@ export const TeamsPage: FC<TeamsPageProps> = ({ user, teams }) => {
           <thead>
             <tr>
               <th>Name</th>
+              <th>Slug</th>
               <th>Slack Channel</th>
-              <th>ntfy Topic</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -59,12 +63,12 @@ export const TeamsPage: FC<TeamsPageProps> = ({ user, teams }) => {
             {teams.map((team) => (
               <tr>
                 <td>
-                  <a href={`/teams/${team.id}`}>{team.name}</a>
+                  <a href={`/app/teams/${team.id}`}>{team.name}</a>
                 </td>
+                <td>@{team.slug}</td>
                 <td>{team.slackChannelId || "—"}</td>
-                <td>{team.ntfyTopic || "—"}</td>
                 <td>
-                  <a href={`/teams/${team.id}`} class="btn btn-sm">
+                  <a href={`/app/teams/${team.id}`} class="btn btn-sm">
                     Manage
                   </a>
                 </td>

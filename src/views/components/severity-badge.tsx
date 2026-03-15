@@ -5,7 +5,11 @@ type SeverityBadgeProps = {
 };
 
 export const SeverityBadge: FC<SeverityBadgeProps> = ({ severity }) => {
-  const cls = severity === "fire" ? "badge badge-fire" : "badge badge-info";
-  const label = severity === "fire" ? "🔥 Fire" : "ℹ️ Info";
+  const map: Record<string, { cls: string; label: string }> = {
+    fire: { cls: "badge badge-fire", label: "Fire" },
+    warning: { cls: "badge badge-warning", label: "Warning" },
+    info: { cls: "badge badge-info", label: "Info" },
+  };
+  const { cls, label } = map[severity] || { cls: "badge", label: severity };
   return <span class={cls}>{label}</span>;
 };

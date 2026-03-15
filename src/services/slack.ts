@@ -5,7 +5,6 @@ export async function sendSlackDM(
   text: string,
   blocks?: object[]
 ) {
-  // Open a DM channel
   const openRes = await fetch("https://slack.com/api/conversations.open", {
     method: "POST",
     headers: {
@@ -21,7 +20,6 @@ export async function sendSlackDM(
 
   const channelId = openData.channel.id;
 
-  // Send the message
   const msgRes = await fetch("https://slack.com/api/chat.postMessage", {
     method: "POST",
     headers: {
@@ -42,15 +40,15 @@ export async function sendSlackDM(
   return msgData;
 }
 
-/** Build Slack blocks for an alert notification */
-export function buildAlertBlocks(
+/** Build Slack blocks for an incident notification */
+export function buildIncidentBlocks(
   title: string,
   body: string,
   severity: string,
-  alertUrl: string,
-  alertId: string
+  incidentUrl: string,
+  incidentId: string
 ) {
-  const emoji = severity === "fire" ? "🔥" : "ℹ️";
+  const emoji = severity === "fire" ? "🔥" : severity === "warning" ? "⚠️" : "ℹ️";
   return [
     {
       type: "header",
@@ -65,22 +63,22 @@ export function buildAlertBlocks(
       elements: [
         {
           type: "button",
-          text: { type: "plain_text", text: "✅ Acknowledge" },
+          text: { type: "plain_text", text: "Acknowledge" },
           style: "primary",
-          action_id: "ack_alert",
-          value: alertId,
+          action_id: "ack_incident",
+          value: incidentId,
         },
         {
           type: "button",
-          text: { type: "plain_text", text: "🔧 Resolve" },
-          action_id: "resolve_alert",
-          value: alertId,
+          text: { type: "plain_text", text: "Resolve" },
+          action_id: "resolve_incident",
+          value: incidentId,
         },
         {
           type: "button",
           text: { type: "plain_text", text: "View in Dashboard" },
-          url: alertUrl,
-          action_id: "view_alert",
+          url: incidentUrl,
+          action_id: "view_incident",
         },
       ],
     },

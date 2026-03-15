@@ -2,7 +2,12 @@ import type { FC } from "hono/jsx";
 import { Layout } from "../layout";
 import { AlertCard } from "../components/alert-card";
 
-type Alert = {
+type Team = {
+  id: string;
+  name: string;
+};
+
+type Incident = {
   id: string;
   title: string;
   severity: string;
@@ -18,49 +23,69 @@ type OnCallInfo = {
 
 type HomePageProps = {
   user: any;
-  activeAlerts: Alert[];
+  orgName: string;
+  teams: Team[];
+  activeIncidents: Incident[];
   onCallSummary: OnCallInfo[];
 };
 
 export const HomePage: FC<HomePageProps> = ({
   user,
-  activeAlerts,
+  orgName,
+  teams,
+  activeIncidents,
   onCallSummary,
 }) => {
   return (
-    <Layout title="Dashboard" user={user}>
+    <Layout title="Dashboard" user={user} orgName={orgName}>
       <div class="dashboard">
-        <div class="dashboard-header">
-          <h1>Dashboard</h1>
-          <a href="/alerts/new" class="btn btn-primary">
-            🚨 Trigger Alert
-          </a>
+        {/* ─── Primary action: Send a Yawp ─── */}
+        <div class="yawp-box card">
+          <h2>Send a Yawp</h2>
+          <p class="text-muted">
+            Alert the on-call person. Their phone will go off.
+          </p>
+          {teams.length === 0 ? (
+            <p class="empty-state">
+              <a href="/app/teams">Create a team</a> to start sending alerts.
+            </p>
+          ) : (
+            <form method="post" action="/app/yawp" class="yawp-form">
+              <div class="yawp-form-row">
+                <select name="teamId" required>
+                  {teams.map((t) => (
+                    <option value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+                <select name="severity">
+                  <option value="fire">Fire</option>
+                  <option value="warning">Warning</option>
+                  <option value="info">Info</option>
+                </select>
+              </div>
+              <input
+                type="text"
+                name="title"
+                placeholder="Check Slack — DB is down"
+                required
+                maxlength={200}
+                class="yawp-input"
+              />
+              <button type="submit" class="btn btn-primary btn-lg yawp-send">
+                Send Yawp
+              </button>
+            </form>
+          )}
         </div>
 
-        <section class="dashboard-section">
-          <h2>Active Alerts ({activeAlerts.length})</h2>
-          {activeAlerts.length === 0 ? (
-            <p class="empty-state">No active alerts — all clear!</p>
-          ) : (
-            <div class="alert-grid">
-              {activeAlerts.map((alert) => (
-                <AlertCard
-                  id={alert.id}
-                  title={alert.title}
-                  severity={alert.severity}
-                  status={alert.status}
-                  createdAt={alert.createdAt}
-                  teamName={alert.teamName}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-
+        {/* ─── On-Call summary ─── */}
         <section class="dashboard-section">
           <h2>On-Call Now</h2>
           {onCallSummary.length === 0 ? (
-            <p class="empty-state">No on-call schedules configured.</p>
+            <p class="empty-state">
+              No on-call schedules configured.{" "}
+              <a href="/app/schedules">Set up schedules</a>
+            </p>
           ) : (
             <table class="table">
               <thead>
@@ -80,6 +105,31 @@ export const HomePage: FC<HomePageProps> = ({
             </table>
           )}
         </section>
+
+        {/* ─── Recent alerts ─── */}
+        {activeIncidents.length > 0 && (
+          <section class="dashboard-section">
+            <div class="dashboard-header">
+              <h2>Active ({activeIncidents.length})</h2>
+              <a href="/app/incidents" class="btn btn-sm">
+                View All
+              </a>
+            </div>
+            <div class="alert-grid">
+              {activeIncidents.map((incident) => (
+                <AlertCard
+                  id={incident.id}
+                  title={incident.title}
+                  severity={incident.severity}
+                  status={incident.status}
+                  createdAt={incident.createdAt}
+                  teamName={incident.teamName}
+                  basePath="/app/incidents"
+                />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </Layout>
   );

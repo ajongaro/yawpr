@@ -16,7 +16,12 @@ export async function publishNtfy(
     headers: {
       Title: title,
       Priority: String(priority),
-      Tags: severity === "fire" ? "rotating_light,fire" : "information_source",
+      Tags:
+        severity === "fire"
+          ? "rotating_light,fire"
+          : severity === "warning"
+            ? "warning"
+            : "information_source",
       Click: clickUrl,
     },
     body: message,

@@ -6,16 +6,21 @@ type Team = {
   name: string;
 };
 
-type AlertNewPageProps = {
+type IncidentNewPageProps = {
   user: any;
+  orgName: string;
   teams: Team[];
 };
 
-export const AlertNewPage: FC<AlertNewPageProps> = ({ user, teams }) => {
+export const IncidentNewPage: FC<IncidentNewPageProps> = ({
+  user,
+  orgName,
+  teams,
+}) => {
   return (
-    <Layout title="Trigger Alert" user={user}>
-      <h1>🚨 Trigger Alert</h1>
-      <form method="post" action="/alerts" class="form">
+    <Layout title="Trigger Incident" user={user} orgName={orgName}>
+      <h1>Trigger Incident</h1>
+      <form method="post" action="/app/incidents" class="form">
         <div class="form-group">
           <label for="teamId">Team</label>
           <select name="teamId" id="teamId" required>
@@ -28,8 +33,9 @@ export const AlertNewPage: FC<AlertNewPageProps> = ({ user, teams }) => {
         <div class="form-group">
           <label for="severity">Severity</label>
           <select name="severity" id="severity" required>
-            <option value="info">ℹ️ Info</option>
-            <option value="fire">🔥 Fire</option>
+            <option value="info">Info</option>
+            <option value="warning">Warning</option>
+            <option value="fire">Fire</option>
           </select>
         </div>
         <div class="form-group">
@@ -53,7 +59,7 @@ export const AlertNewPage: FC<AlertNewPageProps> = ({ user, teams }) => {
           ></textarea>
         </div>
         <button type="submit" class="btn btn-primary btn-lg">
-          🚨 Send Alert
+          Send Incident
         </button>
       </form>
     </Layout>

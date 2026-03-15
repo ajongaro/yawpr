@@ -11,9 +11,10 @@ type Event = {
   createdAt: Date;
 };
 
-type AlertDetailPageProps = {
+type IncidentDetailPageProps = {
   user: any;
-  alert: {
+  orgName: string;
+  incident: {
     id: string;
     title: string;
     description: string | null;
@@ -22,56 +23,65 @@ type AlertDetailPageProps = {
     source: string;
     createdAt: Date;
     acknowledgedAt: Date | null;
+    acknowledgedBy: string | null;
     resolvedAt: Date | null;
+    resolvedBy: string | null;
   };
   events: Event[];
   teamName: string;
 };
 
-export const AlertDetailPage: FC<AlertDetailPageProps> = ({
+export const IncidentDetailPage: FC<IncidentDetailPageProps> = ({
   user,
-  alert,
+  orgName,
+  incident,
   events,
   teamName,
 }) => {
-  const canAck = alert.status === "active";
-  const canResolve = alert.status !== "resolved";
+  const canAck = incident.status === "active";
+  const canResolve = incident.status !== "resolved";
 
   return (
-    <Layout title={alert.title} user={user}>
+    <Layout title={incident.title} user={user} orgName={orgName}>
       <div class="alert-detail">
         <div class="alert-detail-header">
           <div>
-            <h1>{alert.title}</h1>
+            <h1>{incident.title}</h1>
             <div class="alert-meta">
-              <SeverityBadge severity={alert.severity} />
-              <StatusBadge status={alert.status} />
+              <SeverityBadge severity={incident.severity} />
+              <StatusBadge status={incident.status} />
               <span>Team: {teamName}</span>
-              <span>Source: {alert.source}</span>
+              <span>Source: {incident.source}</span>
             </div>
           </div>
           <div class="alert-actions">
             {canAck && (
-              <form method="post" action={`/alerts/${alert.id}/acknowledge`}>
+              <form
+                method="post"
+                action={`/app/incidents/${incident.id}/acknowledge`}
+              >
                 <button type="submit" class="btn btn-primary">
-                  ✅ Acknowledge
+                  Acknowledge
                 </button>
               </form>
             )}
             {canResolve && (
-              <form method="post" action={`/alerts/${alert.id}/resolve`}>
+              <form
+                method="post"
+                action={`/app/incidents/${incident.id}/resolve`}
+              >
                 <button type="submit" class="btn btn-success">
-                  🔧 Resolve
+                  Resolve
                 </button>
               </form>
             )}
           </div>
         </div>
 
-        {alert.description && (
+        {incident.description && (
           <div class="alert-description">
             <h2>Description</h2>
-            <p>{alert.description}</p>
+            <p>{incident.description}</p>
           </div>
         )}
 
@@ -97,9 +107,18 @@ export const AlertDetailPage: FC<AlertDetailPageProps> = ({
 
         <div class="alert-comment-form">
           <h2>Add Comment</h2>
-          <form method="post" action={`/alerts/${alert.id}/comment`}>
-            <textarea name="message" placeholder="Add a comment..." required></textarea>
-            <button type="submit" class="btn">Post Comment</button>
+          <form
+            method="post"
+            action={`/app/incidents/${incident.id}/comment`}
+          >
+            <textarea
+              name="message"
+              placeholder="Add a comment..."
+              required
+            ></textarea>
+            <button type="submit" class="btn">
+              Post Comment
+            </button>
           </form>
         </div>
       </div>

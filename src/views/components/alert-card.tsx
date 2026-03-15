@@ -9,6 +9,7 @@ type AlertCardProps = {
   status: string;
   createdAt: Date | string;
   teamName?: string;
+  basePath?: string;
 };
 
 export const AlertCard: FC<AlertCardProps> = ({
@@ -18,12 +19,13 @@ export const AlertCard: FC<AlertCardProps> = ({
   status,
   createdAt,
   teamName,
+  basePath = "/incidents",
 }) => {
   const time =
     typeof createdAt === "string" ? createdAt : createdAt.toISOString();
 
   return (
-    <a href={`/alerts/${id}`} class={`alert-card alert-card-${severity}`}>
+    <a href={`${basePath}/${id}`} class={`alert-card alert-card-${severity}`}>
       <div class="alert-card-header">
         <SeverityBadge severity={severity} />
         <StatusBadge status={status} />

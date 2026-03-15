@@ -1,6 +1,9 @@
 import type { Context, Next } from "hono";
+import { eq } from "drizzle-orm";
 import type { Env } from "../lib/types";
 import { verifySlackSignature } from "../lib/crypto";
+import { getDb } from "../db/client";
+import { slackInstallations } from "../db/schema";
 
 const FIVE_MINUTES = 5 * 60;
 
@@ -19,9 +22,9 @@ export async function slackVerify(c: Context<Env>, next: Next) {
   }
 
   const body = await c.req.text();
-  // Store raw body for downstream handlers
-  c.set("rawBody" as never, body);
+  c.set("rawBody", body);
 
+  // Verify using the global signing secret (single Slack app)
   const valid = await verifySlackSignature(
     c.env.SLACK_SIGNING_SECRET,
     signature,
@@ -33,5 +36,36 @@ export async function slackVerify(c: Context<Env>, next: Next) {
     return c.json({ error: "Invalid signature" }, 401);
   }
 
+  // Parse team_id to find the installation for org context
+  const params = new URLSearchParams(body);
+  let teamId = params.get("team_id");
+
+  if (!teamId) {
+    const payloadStr = params.get("payload");
+    if (payloadStr) {
+      try {
+        const payload = JSON.parse(payloadStr);
+        teamId = payload.team?.id;
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  if (!teamId) {
+    return c.json({ error: "Cannot determine Slack team" }, 400);
+  }
+
+  const db = getDb(c.env.DB);
+  const [installation] = await db
+    .select()
+    .from(slackInstallations)
+    .where(eq(slackInstallations.slackTeamId, teamId));
+
+  if (!installation) {
+    return c.json({ error: "Slack workspace not connected" }, 404);
+  }
+
+  c.set("slackInstallation", installation);
   await next();
 }

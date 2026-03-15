@@ -1,68 +1,72 @@
 import { eq } from "drizzle-orm";
 import type { Database } from "../db/client";
-import { teamMembers, notificationLog } from "../db/schema";
-import type { NotificationMessage, AlertSeverity } from "../lib/types";
+import { members, notifications } from "../db/schema";
+import type { NotificationMessage, IncidentSeverity } from "../lib/types";
 
-/** Fan out notifications for an alert to all team members */
+/** Fan out notifications for an incident to all team members */
 export async function enqueueNotifications(
   db: Database,
   queue: Queue,
-  alertId: string,
+  incidentId: string,
+  orgId: string,
   teamId: string,
   title: string,
   description: string,
-  severity: AlertSeverity,
-  alertUrl: string
+  severity: IncidentSeverity,
+  incidentUrl: string,
+  botToken?: string
 ) {
-  // Get all members of the team
-  const members = await db
+  const teamMembers = await db
     .select()
-    .from(teamMembers)
-    .where(eq(teamMembers.teamId, teamId));
+    .from(members)
+    .where(eq(members.teamId, teamId));
 
   const messages: NotificationMessage[] = [];
 
-  for (const member of members) {
-    // Slack DM if member has a Slack user ID
-    if (member.slackUserId) {
+  for (const member of teamMembers) {
+    // Slack DM if member has a Slack user ID and we have a bot token
+    if (member.slackUserId && botToken) {
       const msg: NotificationMessage = {
-        alertId,
+        incidentId,
+        orgId,
         recipientId: member.id,
         channel: "slack_dm",
         slackUserId: member.slackUserId,
+        botToken,
         title,
         body: description || title,
         severity,
-        alertUrl,
+        incidentUrl,
       };
       messages.push(msg);
 
-      // Log as queued
-      await db.insert(notificationLog).values({
-        alertId,
+      await db.insert(notifications).values({
+        orgId,
+        incidentId,
         recipientId: member.id,
         channel: "slack_dm",
         status: "queued",
       });
     }
 
-    // ntfy if member has a personal topic, or fall back to team topic
-    const topic = member.ntfyTopic;
-    if (topic) {
+    // ntfy if member has a personal topic
+    if (member.ntfyTopic) {
       const msg: NotificationMessage = {
-        alertId,
+        incidentId,
+        orgId,
         recipientId: member.id,
         channel: "ntfy",
-        ntfyTopic: topic,
+        ntfyTopic: member.ntfyTopic,
         title,
         body: description || title,
         severity,
-        alertUrl,
+        incidentUrl,
       };
       messages.push(msg);
 
-      await db.insert(notificationLog).values({
-        alertId,
+      await db.insert(notifications).values({
+        orgId,
+        incidentId,
         recipientId: member.id,
         channel: "ntfy",
         status: "queued",
@@ -70,7 +74,6 @@ export async function enqueueNotifications(
     }
   }
 
-  // Send all messages to the queue in a batch
   if (messages.length > 0) {
     await queue.send(messages);
   }

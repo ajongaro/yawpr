@@ -12,10 +12,11 @@
   --primary-hover: #4f46e5;
   --fire: #ef4444;
   --fire-bg: rgba(239, 68, 68, 0.1);
+  --warning-color: #f59e0b;
+  --warning-bg: rgba(245, 158, 11, 0.1);
   --info: #3b82f6;
   --info-bg: rgba(59, 130, 246, 0.1);
   --success: #22c55e;
-  --warning: #f59e0b;
   --danger: #ef4444;
   --ack: #f59e0b;
   --ack-bg: rgba(245, 158, 11, 0.1);
@@ -48,10 +49,20 @@ a:hover { text-decoration: underline; }
   z-index: 100;
 }
 
+.nav-brand { display: flex; align-items: center; gap: 0.75rem; }
 .nav-brand a {
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text);
+}
+
+.nav-org {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 0.15rem 0.5rem;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
 }
 
 .nav-links {
@@ -115,6 +126,7 @@ a:hover { text-decoration: underline; }
 }
 
 .badge-fire { background: var(--fire-bg); color: var(--fire); border: 1px solid var(--fire); }
+.badge-warning { background: var(--warning-bg); color: var(--warning-color); border: 1px solid var(--warning-color); }
 .badge-info { background: var(--info-bg); color: var(--info); border: 1px solid var(--info); }
 .badge-active { background: var(--fire-bg); color: var(--fire); border: 1px solid var(--fire); }
 .badge-ack { background: var(--ack-bg); color: var(--ack); border: 1px solid var(--ack); }
@@ -141,6 +153,7 @@ a:hover { text-decoration: underline; }
 .alert-card:hover { border-color: var(--primary); background: var(--surface-hover); text-decoration: none; }
 
 .alert-card-fire { border-left: 3px solid var(--fire); }
+.alert-card-warning { border-left: 3px solid var(--warning-color); }
 .alert-card-info { border-left: 3px solid var(--info); }
 
 .alert-card-header { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
@@ -178,7 +191,7 @@ a:hover { text-decoration: underline; }
   border: 2px solid var(--bg);
 }
 .timeline-created .timeline-marker { background: var(--info); }
-.timeline-acknowledged .timeline-marker { background: var(--warning); }
+.timeline-acknowledged .timeline-marker { background: var(--warning-color); }
 .timeline-resolved .timeline-marker { background: var(--success); }
 .timeline-escalated .timeline-marker { background: var(--fire); }
 .timeline-comment .timeline-marker { background: var(--text-muted); }
@@ -205,6 +218,7 @@ a:hover { text-decoration: underline; }
 .form { margin-bottom: 2rem; }
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; margin-bottom: 0.3rem; font-size: 0.85rem; color: var(--text-muted); }
+.form-group small { display: block; margin-top: 0.25rem; font-size: 0.75rem; color: var(--text-muted); }
 
 .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
 
@@ -257,6 +271,27 @@ textarea { min-height: 80px; resize: vertical; }
 .dashboard-section { margin-bottom: 2.5rem; }
 .dashboard-section h2 { font-size: 1.1rem; margin-bottom: 1rem; }
 
+/* ─── Yawp Box (primary action) ──────────────────────── */
+.yawp-box {
+  border-color: var(--primary);
+  margin-bottom: 2rem;
+}
+.yawp-box h2 { font-size: 1.25rem; margin-bottom: 0.25rem; }
+.yawp-form { margin-top: 1rem; }
+.yawp-form-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.yawp-form-row select { flex: 1; }
+.yawp-input {
+  width: 100%;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  padding: 0.65rem 0.75rem;
+}
+.yawp-send { width: 100%; justify-content: center; }
+
 /* ─── Login ────────────────────────────────────────────── */
 .login-container {
   display: flex;
@@ -274,6 +309,43 @@ textarea { min-height: 80px; resize: vertical; }
 .login-card h1 { font-size: 2rem; margin-bottom: 0.5rem; }
 .login-card p { color: var(--text-muted); margin-bottom: 2rem; }
 
+/* ─── Onboarding ──────────────────────────────────────── */
+.onboarding {
+  max-width: 500px;
+  margin: 4rem auto;
+}
+.onboarding h1 { margin-bottom: 0.5rem; }
+.onboarding > p { color: var(--text-muted); margin-bottom: 2rem; }
+
+/* ─── Banners ─────────────────────────────────────────── */
+.error-banner {
+  background: var(--fire-bg);
+  color: var(--fire);
+  border: 1px solid var(--fire);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+.success-banner {
+  background: var(--resolved-bg);
+  color: var(--success);
+  border: 1px solid var(--success);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+/* ─── Webhook URL ─────────────────────────────────────── */
+.ingest-url {
+  font-size: 0.75rem;
+  background: var(--bg);
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+  word-break: break-all;
+}
+
 /* ─── Utils ────────────────────────────────────────────── */
 .empty-state { color: var(--text-muted); padding: 2rem; text-align: center; }
 
@@ -286,6 +358,274 @@ dd { font-size: 0.9rem; }
 .alert-comment-form form { display: flex; flex-direction: column; gap: 0.75rem; }
 .alert-comment-form .btn { align-self: flex-start; }
 
+/* ─── Marketing: Hero ──────────────────────────────────── */
+.hero {
+  padding: 4rem 1.5rem 3rem;
+  text-align: center;
+}
+.hero-title {
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 1.25rem;
+  background: linear-gradient(135deg, var(--text), var(--primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.hero-subtitle {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  max-width: 540px;
+  margin: 0 auto 2rem;
+  line-height: 1.7;
+}
+.hero-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/* ─── Marketing: Features ─────────────────────────────── */
+.features-section {
+  padding: 3rem 1.5rem;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.section-title {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.section-subtitle {
+  text-align: center;
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+  font-size: 1rem;
+}
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.feature-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+.feature-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+.feature-card h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+.feature-card p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.feature-card code {
+  background: var(--surface);
+  padding: 0.15rem 0.35rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+}
+
+/* ─── Marketing: Problem ───────────────────────────────── */
+.problem-section {
+  padding: 3rem 1.5rem;
+}
+.problem-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.problem-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--fire);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+.problem-quote {
+  font-style: italic;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.problem-explainer {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  max-width: 600px;
+  margin: 1.5rem auto 0;
+  text-align: center;
+}
+
+/* ─── Marketing: How It Works Steps ───────────────────── */
+.how-section {
+  padding: 3rem 1.5rem;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+.step {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+.step-number {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.step strong { display: block; margin-bottom: 0.25rem; }
+.step p { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
+
+/* ─── Marketing: CTA ──────────────────────────────────── */
+.cta-section {
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+.cta-section h2 {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+.cta-section p {
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+/* ─── Marketing: Pricing ──────────────────────────────── */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.pricing-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+}
+.pricing-card-featured {
+  border-color: var(--primary);
+  position: relative;
+}
+.pricing-header { margin-bottom: 1.5rem; }
+.pricing-header h3 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+.pricing-price {
+  font-size: 2.5rem;
+  font-weight: 800;
+}
+.pricing-price span {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.pricing-header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem; }
+.pricing-features {
+  list-style: none;
+  flex: 1;
+  margin-bottom: 1.5rem;
+}
+.pricing-features li {
+  padding: 0.4rem 0;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+.pricing-cta { width: 100%; justify-content: center; }
+
+/* ─── Marketing: Page Sections ────────────────────────── */
+.page-section {
+  padding: 4rem 1.5rem;
+}
+.content-narrow {
+  max-width: 700px;
+  margin: 0 auto;
+}
+.content-narrow h1 { font-size: 2rem; margin-bottom: 1.5rem; }
+.content-narrow h2 { font-size: 1.3rem; margin-top: 2.5rem; margin-bottom: 0.75rem; }
+.content-narrow h3 { font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+.content-narrow p, .content-narrow li { line-height: 1.7; color: var(--text-muted); margin-bottom: 0.75rem; }
+.content-narrow a { color: var(--primary); }
+.content-narrow strong { color: var(--text); }
+.lead { font-size: 1.15rem; margin-bottom: 2rem; }
+
+.how-it-works {
+  list-style: decimal;
+  padding-left: 1.5rem;
+}
+.how-it-works li { margin-bottom: 0.75rem; }
+
+pre {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
+/* ─── Marketing: Docs TOC ─────────────────────────────── */
+.docs-toc { margin-bottom: 2rem; }
+.docs-toc h2 { font-size: 1rem; margin-bottom: 0.5rem; margin-top: 0; }
+.docs-toc ul { list-style: none; }
+.docs-toc li { padding: 0.25rem 0; }
+
+.text-muted { color: var(--text-muted); }
+
+/* ─── Marketing: Footer ──────────────────────────────── */
+.marketing-footer {
+  border-top: 1px solid var(--border);
+  padding: 3rem 1.5rem;
+  background: var(--surface);
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.footer-grid strong { display: block; margin-bottom: 0.5rem; }
+.footer-grid a { display: block; color: var(--text-muted); font-size: 0.9rem; padding: 0.2rem 0; }
+.footer-grid a:hover { color: var(--text); text-decoration: none; }
+.footer-grid p { font-size: 0.85rem; }
+
 /* ─── Responsive ───────────────────────────────────────── */
 @media (max-width: 640px) {
   .nav { flex-direction: column; gap: 0.5rem; }
@@ -293,4 +633,11 @@ dd { font-size: 0.9rem; }
   .alert-detail-header { flex-direction: column; gap: 1rem; }
   .form-inline { flex-direction: column; }
   .form-inline input, .form-inline select { width: 100%; }
+  .hero-title { font-size: 2rem; }
+  .hero-subtitle { font-size: 1rem; }
+  .hero-actions { flex-direction: column; align-items: center; }
+  .footer-grid { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .problem-grid { grid-template-columns: 1fr; }
+  .hero-title { font-size: 1.75rem; }
 }

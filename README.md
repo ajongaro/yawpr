@@ -1,11 +1,11 @@
-# 🔥 mi-fire
+# yawpr
 
 Dev team bat signal alerting system. Dual-channel notifications (Slack DMs + ntfy.sh push) with on-call rotation management, triggerable from a Slack slash command or a web dashboard.
 
 ## How It Works
 
 1. A fire happens — someone runs `/fire fire @backend Database is down` in Slack (or uses the web dashboard)
-2. mi-fire looks up who's on the `backend` team
+2. yawpr looks up who's on the `backend` team
 3. Every team member gets a Slack DM with Acknowledge/Resolve buttons **and** an ntfy.sh push notification on their phone
 4. No one needs Slack open 24/7 — ntfy bypasses Do Not Disturb for fire-severity alerts
 
