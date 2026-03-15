@@ -5,115 +5,102 @@
 - [Slack workspace](https://api.slack.com/apps) where you can create apps
 - Node.js 18+
 
-## 1. Set the Better Auth Secret
-
-Generate a random secret and set it:
+## 1. Set Secrets
 
 ```bash
 npx wrangler secret put BETTER_AUTH_SECRET
 # Paste a random 32+ character string (e.g. from `openssl rand -hex 32`)
+
+npx wrangler secret put ENCRYPTION_KEY
+# Another random 32+ character string for encrypting stored tokens
 ```
 
 ## 2. Create a Slack App
 
-1. Go to https://api.slack.com/apps and click **Create New App** → **From scratch**
-2. Name it `yawpr` and select your workspace
+1. Go to https://api.slack.com/apps and click **Create New App** → **From an app manifest**
+2. Select your workspace and paste the contents of `slack-app-manifest.json`
+3. Replace the URLs if you're using a different domain than `yawpr.dev`
+
+Or create manually:
 
 ### OAuth & Permissions
 Under **OAuth & Permissions**:
-- Add redirect URL: `https://yawpr.aongaro.workers.dev/api/auth/callback/slack`
-- Add Bot Token Scopes:
-  - `chat:write` — send DMs
-  - `users:read` — read user info
-  - `users:read.email` — read user emails
-  - `im:write` — open DM channels
+- Add redirect URLs:
+  - `https://yawpr.dev/api/auth/callback/slack`
+  - `https://yawpr.dev/slack/oauth/callback`
+- Bot Token Scopes: `chat:write`, `commands`, `im:write`, `users:read`, `channels:read`, `groups:read`
+- User Token Scopes: `openid`, `profile`, `email`
 
 ### Slash Commands
 Under **Slash Commands**, create:
-- Command: `/fire`
-- Request URL: `https://yawpr.aongaro.workers.dev/slack/commands`
-- Description: `Trigger a fire alert`
-- Usage hint: `<fire|info> @<team-name> <title>`
+- Command: `/yawp`
+- Request URL: `https://yawpr.dev/slack/commands`
+- Description: `Yawpr — team alerting`
+- Usage hint: `fire @backend DB is down`
 
 ### Interactivity
 Under **Interactivity & Shortcuts**:
 - Toggle **On**
-- Request URL: `https://yawpr.aongaro.workers.dev/slack/interactions`
-
-### Install to Workspace
-- Go to **Install App** and click **Install to Workspace**
-- Copy the **Bot User OAuth Token** (starts with `xoxb-`)
+- Request URL: `https://yawpr.dev/slack/interactions`
 
 ## 3. Set Slack Secrets
 
 ```bash
 npx wrangler secret put SLACK_CLIENT_ID
-# Paste from Basic Information → App Credentials → Client ID
+# Basic Information → App Credentials → Client ID
 
 npx wrangler secret put SLACK_CLIENT_SECRET
-# Paste from Basic Information → App Credentials → Client Secret
-
-npx wrangler secret put SLACK_SIGNING_SECRET
-# Paste from Basic Information → App Credentials → Signing Secret
-
-npx wrangler secret put SLACK_BOT_TOKEN
-# Paste the xoxb- token from Install App
+# Basic Information → App Credentials → Client Secret
 ```
 
-## 4. Set ntfy.sh Base URL (optional)
+## 4. Set Stripe Secrets (optional)
 
-Only needed if you're using a self-hosted ntfy instance:
+Only needed if you want the $1M/mo checkout button to work:
 
 ```bash
-npx wrangler secret put NTFY_BASE_URL
-# Default is https://ntfy.sh if not set
+npx wrangler secret put STRIPE_SECRET_KEY
+# Your Stripe secret key (sk_live_... or sk_test_...)
+
+npx wrangler secret put STRIPE_PRICE_ID
+# The Stripe Price ID for the $1M/mo product
 ```
 
-## 5. Redeploy
-
-After setting secrets, redeploy to pick them up:
+## 5. Deploy
 
 ```bash
-npm run deploy
+npm run db:migrate:remote   # Apply D1 migrations
+npm run deploy              # Deploy to Cloudflare Workers
 ```
 
 ## 6. Verify
 
-1. Visit https://yawpr.aongaro.workers.dev — you should see the login page
+1. Visit https://yawpr.dev — you should see the landing page
 2. Click "Sign in with Slack" — complete the OAuth flow
-3. Create a team, add members with Slack user IDs and/or ntfy topics
-4. Set up an on-call schedule
-5. Trigger a test alert from the web dashboard
-6. Try `/fire info @your-team Test alert` in Slack
+3. First user: create the organization (name + slug)
+4. From Settings, connect the Slack app to your workspace
+5. In Slack, type `/yawp setup` to create your first team
+6. Try `/yawp fire` to trigger a test incident
 
 ## Local Development
 
 ```bash
-# Copy .dev.vars.example and fill in your secrets
-cp .dev.vars.example .dev.vars
-
-# Apply migrations locally
-npm run db:migrate
-
-# Start dev server
-npm run dev
+cp .dev.vars.example .dev.vars   # Fill in your secrets
+npm run db:migrate               # Apply migrations locally
+npm run dev                      # Start dev server
 ```
 
-## ntfy.sh Setup for Devs
+## ntfy.sh Setup
 
-Each team member who wants push notifications:
+When members are added to a team (via `/yawp setup` or `/yawp team @slug` → Add Members), they automatically get a DM with:
+1. A unique, auto-generated ntfy topic
+2. Instructions to install the ntfy app and subscribe
 
-1. Install the [ntfy app](https://ntfy.sh) on their phone/desktop
-2. Subscribe to their team's topic (e.g. `yawpr-backend`)
-3. Add their personal ntfy topic in the team member settings
-
-Severity mapping:
-- **fire** → Priority 5 (urgent, bypasses Do Not Disturb)
-- **info** → Priority 3 (default)
+No manual configuration needed. Fire-severity alerts bypass Do Not Disturb.
 
 ## Architecture Notes
 
-- Single Cloudflare Worker handles both HTTP (`fetch`) and queue processing (`queue`)
-- Slack slash commands must respond within 3 seconds — alert notifications are queued asynchronously via Cloudflare Queues
-- All alert state changes are recorded in the `alert_events` table (append-only audit log)
+- Single Cloudflare Worker handles HTTP (`fetch`) and queue processing (`queue`)
+- Slack slash commands respond within 3 seconds — notifications are queued via Cloudflare Queues
+- All incident state changes are recorded in the `incident_events` table (append-only audit log)
 - Better Auth manages user sessions with Slack as the OAuth provider
+- ntfy topics are auto-generated per member (`yawpr-<random hex>`) for privacy

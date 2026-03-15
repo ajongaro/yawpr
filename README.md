@@ -1,79 +1,58 @@
 # yawpr
 
-Dev team bat signal alerting system. Dual-channel notifications (Slack DMs + ntfy.sh push) with on-call rotation management, triggerable from a Slack slash command or a web dashboard.
+Dev team alerting — Slack-first, with push notifications that bypass Do Not Disturb.
 
 ## How It Works
 
-1. A fire happens — someone runs `/fire fire @backend Database is down` in Slack (or uses the web dashboard)
-2. yawpr looks up who's on the `backend` team
-3. Every team member gets a Slack DM with Acknowledge/Resolve buttons **and** an ntfy.sh push notification on their phone
-4. No one needs Slack open 24/7 — ntfy bypasses Do Not Disturb for fire-severity alerts
+1. Someone types `/yawp fire @backend Database is down` in Slack
+2. Yawpr finds everyone on the `backend` team
+3. Each member gets a Slack DM with Acknowledge/Resolve buttons **and** an ntfy.sh push notification
+4. Fire-severity alerts bypass Do Not Disturb — no one needs Slack open 24/7
 
 ## Stack
 
-- **Runtime**: Cloudflare Workers (single Worker)
+- **Runtime**: Cloudflare Workers
 - **Framework**: Hono with JSX (SSR)
 - **Database**: Cloudflare D1 (SQLite) + Drizzle ORM
 - **Auth**: Better Auth (Slack OAuth)
 - **Async**: Cloudflare Queues (notification fan-out)
 - **Notifications**: Slack Web API + [ntfy.sh](https://ntfy.sh)
+- **Payments**: Stripe Checkout
+
+## Slack Bot
+
+Everything runs through `/yawp`:
+
+```
+/yawp                              Show all commands
+/yawp setup                       Create a team (wizard modal)
+/yawp teams                       List all teams
+/yawp team @backend               Manage team (add/remove members, schedule, rename, delete)
+/yawp fire                        Trigger incident (modal with team picker + severity)
+/yawp fire @backend DB is down    Quick-fire shortcut
+/yawp oncall @backend             Who's on call?
+/yawp status                      Active incidents
+/yawp history                     Recent incident history
+```
 
 ## Features
 
+- **Slack-first** — setup, team management, scheduling, and incidents all through the `/yawp` bot
 - **Dual-channel alerts** — Slack DMs with interactive buttons + ntfy.sh push notifications
-- **Slash command** — `/fire <fire|info> @<team> <title>` from any Slack channel
-- **Web dashboard** — SSR pages for managing teams, schedules, and triggering alerts
-- **On-call schedules** — assign rotation windows per team member
-- **Audit log** — every alert action (created, acknowledged, resolved, commented) is recorded
-- **Severity levels** — `fire` (priority 5, bypasses DND) and `info` (priority 3)
-- **Notification tracking** — delivery status logged for every Slack DM and ntfy push
-
-## Project Structure
-
-```
-src/
-├── index.ts              # Worker entry (fetch + queue handlers)
-├── db/
-│   ├── schema.ts         # Drizzle tables (6 domain tables)
-│   └── client.ts         # D1 connection helper
-├── routes/
-│   ├── api/              # REST endpoints (alerts, teams, schedules)
-│   ├── slack/            # Slash command + interactions
-│   ├── auth/             # Better Auth (Slack OAuth)
-│   └── dashboard.tsx     # SSR page routes
-├── services/
-│   ├── alert.ts          # Create, acknowledge, resolve alerts
-│   ├── notification.ts   # Queue producer (fan-out)
-│   ├── slack.ts          # Slack Web API (DMs, interactive blocks)
-│   ├── ntfy.ts           # ntfy.sh HTTP publisher
-│   └── oncall.ts         # On-call schedule resolver
-├── middleware/
-│   ├── auth.ts           # Session guard
-│   ├── slack-verify.ts   # HMAC-SHA256 signature verification
-│   └── error-handler.ts
-├── views/                # Hono JSX components and pages
-├── queue/
-│   └── consumer.ts       # Processes notification messages
-└── lib/
-    ├── types.ts          # Env bindings, shared types
-    ├── crypto.ts         # Web Crypto helpers
-    └── constants.ts
-```
+- **Modal wizards** — team setup, incident triggering, on-call scheduling all use Slack modals
+- **Auto-generated ntfy topics** — each member gets a unique, private push notification topic
+- **On-call schedules** — date/time picker in Slack, no typing required
+- **Webhook ingestion** — CloudWatch, Datadog, or generic JSON webhooks auto-create incidents
+- **Auto-join** — first user creates the org, everyone else auto-joins on sign-in
+- **Audit log** — every incident action (created, acknowledged, resolved, commented) is recorded
 
 ## Development
 
 ```bash
 npm install
-
-# Set up local secrets
-cp .dev.vars.example .dev.vars
-# Fill in your Slack app credentials and auth secret
-
-# Apply D1 migrations locally
-npm run db:migrate
-
-# Start dev server
-npm run dev
+cp .dev.vars.example .dev.vars   # Fill in Slack credentials + auth secret
+npm run db:migrate               # Apply D1 migrations locally
+npm run dev                      # Start dev server
 ```
 
 ## Deployment
@@ -82,17 +61,4 @@ npm run dev
 npm run deploy
 ```
 
-See [SETUP.md](SETUP.md) for full deployment instructions including Slack app configuration and secret management.
-
-## Slash Command Usage
-
-```
-/fire fire @backend Database is down
-/fire info @platform Deployment delayed 30 min
-```
-
-Format: `/fire <severity> @<team-name> <title>`
-
-## ntfy.sh for Devs
-
-Team members install the [ntfy app](https://ntfy.sh) and subscribe to their team's topic. Fire-severity alerts arrive as urgent notifications that bypass Do Not Disturb.
+See [SETUP.md](SETUP.md) for Slack app configuration and secret management.
