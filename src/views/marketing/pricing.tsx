@@ -45,7 +45,7 @@ export const PricingPage: FC = () => {
                 <li>Everything in Free</li>
                 <li>Priority support</li>
                 <li>Custom webhook parsers</li>
-                <li>A personal thank-you call from the founder</li>
+                <li>Anthony personally flies to each dev's home to hand-deliver a wax-sealed incident report</li>
               </ul>
               <form method="post" action="/api/checkout">
                 <button type="submit" class="btn btn-primary btn-lg pricing-cta">
