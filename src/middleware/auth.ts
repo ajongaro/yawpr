@@ -1,9 +1,9 @@
 import type { Context, Next } from "hono";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import type { Env } from "../lib/types";
 import { getAuth } from "../routes/auth/auth";
 import { getDb } from "../db/client";
-import { organizations } from "../db/schema";
+import { organizations, members, account } from "../db/schema";
 
 export async function authGuard(c: Context<Env>, next: Next) {
   try {
@@ -22,36 +22,55 @@ export async function authGuard(c: Context<Env>, next: Next) {
     c.set("user", session.user as Env["Variables"]["user"]);
     c.set("session", session.session as Env["Variables"]["session"]);
 
-    // Extract org context from session
     let activeOrgId = (session.session as any).activeOrganizationId;
 
     if (!activeOrgId) {
-      // No active org — try to auto-join an existing one
       const db = getDb(c.env.DB);
-      const [existingOrg] = await db.select().from(organizations).limit(1);
 
-      if (existingOrg) {
-        // Org exists — add user as member and set active
-        try {
-          await auth.api.addMember({
-            body: {
-              organizationId: existingOrg.id,
-              userId: session.user.id,
-              role: "member",
-            },
+      // Look up the user's Slack ID from their OAuth account
+      const [acct] = await db
+        .select()
+        .from(account)
+        .where(
+          and(
+            eq(account.userId, session.user.id),
+            eq(account.providerId, "slack")
+          )
+        );
+
+      if (acct) {
+        // Find an org this person belongs to via team membership
+        const [membership] = await db
+          .select({ orgId: members.orgId })
+          .from(members)
+          .where(eq(members.slackUserId, acct.accountId))
+          .limit(1);
+
+        if (membership) {
+          // Auto-join the org in Better Auth and set active
+          try {
+            await auth.api.addMember({
+              body: {
+                organizationId: membership.orgId,
+                userId: session.user.id,
+                role: "member",
+              },
+            });
+          } catch {
+            // Already a member
+          }
+
+          await auth.api.setActiveOrganization({
+            body: { organizationId: membership.orgId },
+            headers: c.req.raw.headers,
           });
-        } catch {
-          // Already a member — that's fine
+
+          activeOrgId = membership.orgId;
         }
+      }
 
-        await auth.api.setActiveOrganization({
-          body: { organizationId: existingOrg.id },
-          headers: c.req.raw.headers,
-        });
-
-        activeOrgId = existingOrg.id;
-      } else {
-        // No org exists yet — first user needs to create one via onboarding
+      // Still no org — show onboarding to create one
+      if (!activeOrgId) {
         if (
           !c.req.path.startsWith("/app/onboarding") &&
           !c.req.path.startsWith("/api/auth")
