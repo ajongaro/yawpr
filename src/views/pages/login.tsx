@@ -37,6 +37,9 @@ export const LoginPage: FC = () => {
           <button id="slack-login" class="btn btn-primary btn-lg">
             Sign in with Slack
           </button>
+          <p style="margin-top: 1rem">
+            <a href="/">Back to home</a>
+          </p>
         </div>
       </div>
       <script dangerouslySetInnerHTML={{ __html: script }} />

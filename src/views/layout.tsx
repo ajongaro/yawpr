@@ -31,9 +31,11 @@ export const Layout: FC<LayoutProps> = ({ title, children, user, orgName }) => {
             {user ? (
               <span class="nav-user">
                 {user.name}
-                <a href="/api/auth/sign-out" class="btn btn-sm">
-                  Sign out
-                </a>
+                <form method="post" action="/app/sign-out" style="display:inline">
+                  <button type="submit" class="btn btn-sm">
+                    Sign out
+                  </button>
+                </form>
               </span>
             ) : (
               <a href="/app/login" class="btn btn-sm btn-primary">

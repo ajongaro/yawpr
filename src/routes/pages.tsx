@@ -45,6 +45,12 @@ pages.get("/login", (c) => {
   return c.html(<LoginPage />);
 });
 
+pages.post("/sign-out", async (c) => {
+  const auth = getAuth(c.env);
+  await auth.api.signOut({ headers: c.req.raw.headers });
+  return c.redirect("/");
+});
+
 // ─── Protected routes ────────────────────────────────────
 pages.use("/*", authGuard);
 
