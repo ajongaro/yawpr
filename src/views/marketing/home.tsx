@@ -25,27 +25,33 @@ export const MarketingHomePage: FC = () => {
 
       <section class="how-section how-section-compact">
         <div class="container content-narrow">
-          <h2 class="section-title">Set up in 2 minutes</h2>
+          <h2 class="section-title">How it works</h2>
           <div class="steps">
             <div class="step">
               <div class="step-number">1</div>
               <div>
-                <strong>Sign in with Slack</strong>
-                <p>One click. No password.</p>
+                <strong>Admin signs in once</strong>
+                <p>Sign in with Slack, name your group, connect the bot. One-time setup.</p>
               </div>
             </div>
             <div class="step">
               <div class="step-number">2</div>
               <div>
-                <strong>Run /yawp setup</strong>
-                <p>Name a team, pick members. Everyone gets a DM with push notification setup.</p>
+                <strong>Build your teams in Slack</strong>
+                <p>
+                  <code>/yawp setup</code> — pick members, they get a DM
+                  with push notification setup. No one else touches the website.
+                </p>
               </div>
             </div>
             <div class="step">
               <div class="step-number">3</div>
               <div>
-                <strong>Type /yawp fire</strong>
-                <p>Pick a team, describe the problem, hit send. Phones go off.</p>
+                <strong>Fire when it matters</strong>
+                <p>
+                  <code>/yawp fire</code> — the team's phones go off.
+                  No response in 15 min? Auto-escalates to the full team.
+                </p>
               </div>
             </div>
           </div>

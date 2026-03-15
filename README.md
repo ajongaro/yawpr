@@ -1,63 +1,63 @@
 # yawpr
 
-Dev team alerting — Slack-first, with push notifications that bypass Do Not Disturb.
+Slack-first team alerting with push notifications that bypass Do Not Disturb.
 
-## How It Works
+## TL;DR
 
-1. Someone types `/yawp fire @backend Database is down` in Slack
-2. Yawpr finds everyone on the `backend` team
-3. Each member gets a Slack DM with Acknowledge/Resolve buttons **and** an ntfy.sh push notification
-4. Fire-severity alerts bypass Do Not Disturb — no one needs Slack open 24/7
+1. Admin signs in once at yawpr.dev, names the group, connects the Slack bot
+2. Admin runs `/yawp setup` in Slack — creates teams, adds members
+3. Members get a DM with push notification setup (ntfy app). They never touch the website.
+4. `/yawp fire @oncall DB is down` — phones go off
+5. No ack in 15 min? Auto-escalates to the full team
+
+## How On-Call Works
+
+No scheduling. Use teams:
+
+- `@michigan-oncall` — whoever is on duty right now
+- `@michigan-all` — the full team (escalation target)
+- Set escalation: `/yawp team @michigan-oncall` → Set Escalation → `@michigan-all`
+- Swap on-call: add/remove members from the on-call team. Their ntfy topic carries over.
+
+## Bot Commands
+
+```
+/yawp                            Show all commands
+/yawp setup                     Create a team + add members
+/yawp teams                     List teams
+/yawp team @slug                Manage team (members, escalation, rename, delete)
+/yawp fire                      Trigger incident (form)
+/yawp fire @team msg            Quick-fire (no form)
+/yawp status                    Active incidents
+/yawp history                   Recent incidents
+```
+
+## Multi-Group Support
+
+Multiple isolated groups can share one Slack workspace. Each group admin creates their own org — Michigan, New Hampshire, etc. Members are automatically scoped to their group. Data is fully isolated.
 
 ## Stack
 
-- **Runtime**: Cloudflare Workers
-- **Framework**: Hono with JSX (SSR)
-- **Database**: Cloudflare D1 (SQLite) + Drizzle ORM
-- **Auth**: Better Auth (Slack OAuth)
-- **Async**: Cloudflare Queues (notification fan-out)
-- **Notifications**: Slack Web API + [ntfy.sh](https://ntfy.sh)
-- **Payments**: Stripe Checkout
-
-## Slack Bot
-
-Everything runs through `/yawp`:
-
-```
-/yawp                              Show all commands
-/yawp setup                       Create a team (wizard modal)
-/yawp teams                       List all teams
-/yawp team @backend               Manage team (add/remove members, rename, delete)
-/yawp fire                        Trigger incident (modal with team picker + severity)
-/yawp fire @backend DB is down    Quick-fire shortcut
-/yawp status                      Active incidents
-/yawp history                     Recent incident history
-```
-
-## Features
-
-- **Slack-first** — setup, team management, scheduling, and incidents all through the `/yawp` bot
-- **Dual-channel alerts** — Slack DMs with interactive buttons + ntfy.sh push notifications
-- **Modal wizards** — team setup, incident triggering, and member management all use Slack modals
-- **Auto-generated ntfy topics** — each member gets a unique, private push notification topic
-- **On-call via teams** — create an `@oncall` team, move people in/out as needed
-- **Webhook ingestion** — CloudWatch, Datadog, or generic JSON webhooks auto-create incidents
-- **Auto-join** — first user creates the org, everyone else auto-joins on sign-in
-- **Audit log** — every incident action (created, acknowledged, resolved, commented) is recorded
+- Cloudflare Workers + D1 + Queues
+- Hono with JSX (SSR)
+- Better Auth (Slack OAuth)
+- Slack Web API + [ntfy.sh](https://ntfy.sh)
+- Stripe Checkout
 
 ## Development
 
 ```bash
 npm install
-cp .dev.vars.example .dev.vars   # Fill in Slack credentials + auth secret
-npm run db:migrate               # Apply D1 migrations locally
-npm run dev                      # Start dev server
+cp .dev.vars.example .dev.vars
+npm run db:migrate
+npm run dev
 ```
 
 ## Deployment
 
 ```bash
+npm run db:migrate:remote
 npm run deploy
 ```
 
-See [SETUP.md](SETUP.md) for Slack app configuration and secret management.
+See [SETUP.md](SETUP.md) for Slack app configuration and secrets.
