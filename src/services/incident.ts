@@ -1,8 +1,8 @@
 import { eq, and } from "drizzle-orm";
 import type { Database } from "../db/client";
-import { incidents, incidentEvents } from "../db/schema";
+import { incidents, incidentEvents, teams } from "../db/schema";
 import { enqueueNotifications } from "./notify";
-import type { IncidentSeverity, IncidentSource } from "../lib/types";
+import type { IncidentSeverity, IncidentSource, EscalationCheck } from "../lib/types";
 
 type CreateIncidentInput = {
   orgId: string;
@@ -41,7 +41,7 @@ export async function createIncident(
     message: `Incident created via ${input.source}`,
   });
 
-  const incidentUrl = `${appUrl}/incidents/${incident.id}`;
+  const incidentUrl = `${appUrl}/app/incidents/${incident.id}`;
   await enqueueNotifications(
     db,
     queue,
@@ -54,6 +54,26 @@ export async function createIncident(
     incidentUrl,
     input.botToken
   );
+
+  // If the team has an escalation target, schedule an escalation check
+  const [team] = await db
+    .select()
+    .from(teams)
+    .where(eq(teams.id, input.teamId));
+
+  if (team?.escalateToTeamId && input.botToken) {
+    const escalation: EscalationCheck = {
+      type: "escalation_check",
+      incidentId: incident.id,
+      orgId: input.orgId,
+      escalateToTeamId: team.escalateToTeamId,
+      botToken: input.botToken,
+      title: input.title,
+      severity: input.severity,
+      incidentUrl,
+    };
+    await queue.send(escalation, { delaySeconds: 900 }); // 15 minutes
+  }
 
   return incident;
 }

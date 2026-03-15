@@ -1,0 +1,1 @@
+ALTER TABLE `teams` ADD `escalate_to_team_id` text;

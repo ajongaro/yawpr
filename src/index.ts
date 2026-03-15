@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Env } from "./lib/types";
-import type { NotificationMessage } from "./lib/types";
+import type { QueueMessage } from "./lib/types";
 import { errorHandler } from "./middleware/error-handler";
 import { authRoutes } from "./routes/auth/index";
 import { incidentsApi } from "./routes/api/incidents";
@@ -48,7 +48,7 @@ app.route("/app", pages);
 export default {
   fetch: app.fetch,
   async queue(
-    batch: MessageBatch<NotificationMessage[]>,
+    batch: MessageBatch<QueueMessage>,
     env: Env["Bindings"]
   ) {
     await handleNotificationQueue(batch, env);

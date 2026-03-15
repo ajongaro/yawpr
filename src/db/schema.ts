@@ -148,6 +148,7 @@ export const teams = sqliteTable(
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     slackChannelId: text("slack_channel_id"),
+    escalateToTeamId: text("escalate_to_team_id"),
     createdAt: integer("created_at", { mode: "timestamp" })
       .notNull()
       .$defaultFn(() => new Date()),

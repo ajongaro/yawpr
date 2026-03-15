@@ -1,19 +1,62 @@
 import { eq, and } from "drizzle-orm";
 import { getDb } from "../db/client";
-import { notifications } from "../db/schema";
+import { notifications, incidents, incidentEvents } from "../db/schema";
 import { sendSlackDM, buildIncidentBlocks } from "../services/slack";
 import { publishNtfy } from "../services/ntfy";
-import type { NotificationMessage, Env } from "../lib/types";
+import { enqueueNotifications } from "../services/notify";
+import type { NotificationMessage, EscalationCheck, QueueMessage, Env } from "../lib/types";
 import { SEVERITY_EMOJI } from "../lib/constants";
 
 export async function handleNotificationQueue(
-  batch: MessageBatch<NotificationMessage[]>,
+  batch: MessageBatch<QueueMessage>,
   env: Env["Bindings"]
 ) {
   const db = getDb(env.DB);
 
   for (const message of batch.messages) {
-    const notifList = message.body;
+    const body = message.body;
+
+    // ─── Escalation check ─────────────────────────────
+    if (!Array.isArray(body) && body.type === "escalation_check") {
+      const check = body as EscalationCheck;
+      try {
+        // Look up the incident — only escalate if still unacknowledged
+        const [incident] = await db
+          .select()
+          .from(incidents)
+          .where(eq(incidents.id, check.incidentId));
+
+        if (incident && incident.status === "active") {
+          // Escalate: send notifications to the escalation team
+          await enqueueNotifications(
+            db,
+            env.NOTIFICATION_QUEUE,
+            check.incidentId,
+            check.orgId,
+            check.escalateToTeamId,
+            `[ESCALATED] ${check.title}`,
+            `No acknowledgment after 15 minutes. Escalating to full team.`,
+            check.severity,
+            check.incidentUrl,
+            check.botToken
+          );
+
+          await db.insert(incidentEvents).values({
+            incidentId: check.incidentId,
+            eventType: "escalated",
+            message: "Auto-escalated after 15 minutes with no acknowledgment",
+          });
+        }
+      } catch (err) {
+        console.error("Escalation check failed:", err);
+      }
+
+      message.ack();
+      continue;
+    }
+
+    // ─── Notification messages ────────────────────────
+    const notifList = body as NotificationMessage[];
 
     for (const notif of notifList) {
       try {

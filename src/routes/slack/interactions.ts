@@ -17,6 +17,7 @@ import { sendSlackDM } from "../../services/slack";
 import {
   openAddMembersModal,
   openRemoveMemberModal,
+  openSetEscalationModal,
   openRenameTeamModal,
   openDeleteTeamModal,
 } from "./modals";
@@ -197,6 +198,44 @@ slackInteractions.post("/", async (c) => {
     }
 
     // ─── Rename team submission ──────────────────────────
+    // ─── Set escalation submission ─────────────────────
+    if (callbackId === "team_set_escalation_submit") {
+      const targetId =
+        payload.view.state.values.escalation_target.value.selected_option?.value;
+
+      await db
+        .update(teams)
+        .set({
+          escalateToTeamId: targetId === "none" ? null : targetId,
+        })
+        .where(
+          and(eq(teams.id, metadata.teamId), eq(teams.orgId, metadata.orgId))
+        );
+
+      const label = targetId === "none" ? "disabled" : "configured";
+
+      return c.json({
+        response_action: "update",
+        view: {
+          type: "modal",
+          title: { type: "plain_text", text: "Escalation updated" },
+          close: { type: "plain_text", text: "Done" },
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: targetId === "none"
+                  ? "Auto-escalation has been disabled for this team."
+                  : `Auto-escalation ${label}. Unacknowledged incidents will escalate after 15 minutes.`,
+              },
+            },
+          ],
+        },
+      });
+    }
+
+    // ─── Rename team submission ──────────────────────────
     if (callbackId === "team_rename_submit") {
       const newName = payload.view.state.values.new_name.value.value;
       if (!newName) {
@@ -348,6 +387,7 @@ slackInteractions.post("/", async (c) => {
     const teamManageActions = [
       "team_add_members",
       "team_remove_member",
+      "team_set_escalation",
       "team_rename",
       "team_delete",
     ];
@@ -364,6 +404,8 @@ slackInteractions.post("/", async (c) => {
         await openAddMembersModal(botToken, triggerId, metadata.orgId, metadata.teamId);
       } else if (action.action_id === "team_remove_member") {
         await openRemoveMemberModal(botToken, triggerId, metadata.orgId, metadata.teamId, db);
+      } else if (action.action_id === "team_set_escalation") {
+        await openSetEscalationModal(botToken, triggerId, metadata.orgId, metadata.teamId, db);
       } else if (action.action_id === "team_rename") {
         await openRenameTeamModal(botToken, triggerId, metadata.orgId, metadata.teamId, db);
       } else if (action.action_id === "team_delete") {

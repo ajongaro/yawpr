@@ -51,3 +51,16 @@ export type NotificationMessage = {
   severity: IncidentSeverity;
   incidentUrl: string;
 };
+
+export type EscalationCheck = {
+  type: "escalation_check";
+  incidentId: string;
+  orgId: string;
+  escalateToTeamId: string;
+  botToken: string;
+  title: string;
+  severity: IncidentSeverity;
+  incidentUrl: string;
+};
+
+export type QueueMessage = NotificationMessage[] | EscalationCheck;

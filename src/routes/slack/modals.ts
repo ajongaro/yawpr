@@ -52,6 +52,16 @@ export async function openTeamManageModal(
     .from(members)
     .where(and(eq(members.orgId, orgId), eq(members.teamId, teamId)));
 
+  // Look up escalation target name
+  let escalationText = "_None — no auto-escalation_";
+  if (team.escalateToTeamId) {
+    const [escTeam] = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.id, team.escalateToTeamId));
+    if (escTeam) escalationText = `@${escTeam.slug}`;
+  }
+
   const memberLines =
     teamMembers.length > 0
       ? teamMembers
@@ -68,7 +78,7 @@ export async function openTeamManageModal(
     blocks: [
       {
         type: "section",
-        text: { type: "mrkdwn", text: `*@${team.slug}* · ${teamMembers.length} members` },
+        text: { type: "mrkdwn", text: `*@${team.slug}* · ${teamMembers.length} members\nEscalates to: ${escalationText}` },
       },
       { type: "divider" },
       {
@@ -90,6 +100,11 @@ export async function openTeamManageModal(
             type: "button",
             text: pt("Remove Member"),
             action_id: "team_remove_member",
+          },
+          {
+            type: "button",
+            text: pt("Set Escalation"),
+            action_id: "team_set_escalation",
           },
           {
             type: "button",
@@ -183,6 +198,71 @@ export async function openRemoveMemberModal(
           type: "static_select",
           action_id: "value",
           options,
+        },
+      },
+    ],
+  });
+}
+
+// ─── Set escalation modal ───────────────────────────────
+
+export async function openSetEscalationModal(
+  botToken: string,
+  triggerId: string,
+  orgId: string,
+  teamId: string,
+  db: DB
+) {
+  // Get all other teams as options
+  const allTeams = await db
+    .select()
+    .from(teams)
+    .where(eq(teams.orgId, orgId));
+
+  const otherTeams = allTeams.filter((t) => t.id !== teamId);
+
+  const options = [
+    { text: pt("None (no auto-escalation)"), value: "none" },
+    ...otherTeams.map((t) => ({
+      text: pt(`${t.name} (@${t.slug})`),
+      value: t.id,
+    })),
+  ];
+
+  // Find current setting
+  const [team] = await db
+    .select()
+    .from(teams)
+    .where(eq(teams.id, teamId));
+
+  const currentOption = team?.escalateToTeamId
+    ? options.find((o) => o.value === team.escalateToTeamId)
+    : options[0];
+
+  await openModal(botToken, triggerId, {
+    type: "modal",
+    callback_id: "team_set_escalation_submit",
+    private_metadata: meta({ orgId, teamId }),
+    title: pt("Set escalation"),
+    submit: pt("Save"),
+    close: pt("Cancel"),
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "If an incident isn't acknowledged within *15 minutes*, it auto-escalates to the selected team.",
+        },
+      },
+      {
+        type: "input",
+        block_id: "escalation_target",
+        label: pt("Escalate to"),
+        element: {
+          type: "static_select",
+          action_id: "value",
+          options,
+          ...(currentOption ? { initial_option: currentOption } : {}),
         },
       },
     ],
