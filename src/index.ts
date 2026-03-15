@@ -31,6 +31,7 @@ app.use("/api/teams/*", authGuard);
 app.use("/api/incidents/*", authGuard);
 app.route("/api/teams", teamsApi);
 app.route("/api/incidents", incidentsApi);
+app.use("/api/checkout/*", authGuard);
 app.route("/api/checkout", checkoutApi);
 
 // ─── Slack routes (commands/interactions before install — install has authGuard wildcard)

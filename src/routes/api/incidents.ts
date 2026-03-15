@@ -62,9 +62,18 @@ incidentsApi.get("/:id", async (c) => {
   return c.json(incident);
 });
 
-// Get incident events
+// Get incident events (org-scoped)
 incidentsApi.get("/:id/events", async (c) => {
   const db = getDb(c.env.DB);
+  const orgId = c.get("orgId");
+
+  // Verify the incident belongs to this org
+  const [incident] = await db
+    .select()
+    .from(incidents)
+    .where(and(eq(incidents.id, c.req.param("id")), eq(incidents.orgId, orgId)));
+  if (!incident) return c.json({ error: "Incident not found" }, 404);
+
   const events = await db
     .select()
     .from(incidentEvents)
@@ -154,13 +163,22 @@ incidentsApi.post("/:id/resolve", async (c) => {
   return c.json(incident);
 });
 
-// Add comment
+// Add comment (org-scoped)
 incidentsApi.post(
   "/:id/comment",
   zValidator("json", commentSchema),
   async (c) => {
     const db = getDb(c.env.DB);
+    const orgId = c.get("orgId");
     const user = c.get("user");
+
+    // Verify the incident belongs to this org
+    const [incident] = await db
+      .select()
+      .from(incidents)
+      .where(and(eq(incidents.id, c.req.param("id")), eq(incidents.orgId, orgId)));
+    if (!incident) return c.json({ error: "Incident not found" }, 404);
+
     const { message } = c.req.valid("json");
     await addComment(db, c.req.param("id"), user?.id, message);
     return c.json({ ok: true });

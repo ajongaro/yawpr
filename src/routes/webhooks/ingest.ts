@@ -21,6 +21,10 @@ webhookIngest.post("/:sourceId/ingest", webhookVerify, async (c) => {
   try {
     const data = JSON.parse(rawBody);
     if (data.Type === "SubscriptionConfirmation" && data.SubscribeURL) {
+      const url = new URL(data.SubscribeURL);
+      if (!url.hostname.endsWith(".amazonaws.com")) {
+        return c.json({ error: "Invalid SubscribeURL" }, 400);
+      }
       await fetch(data.SubscribeURL);
       return c.json({ ok: true, message: "Subscription confirmed" });
     }

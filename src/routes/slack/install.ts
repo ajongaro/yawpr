@@ -5,6 +5,7 @@ import { getDb } from "../../db/client";
 import { slackInstallations } from "../../db/schema";
 import { buildInstallUrl, exchangeCode } from "../../lib/slack-oauth";
 import { encryptSecret } from "../../lib/crypto";
+import { getCookie, setCookie } from "hono/cookie";
 
 const slackInstall = new Hono<Env>();
 
@@ -15,7 +16,18 @@ slackInstall.use("/*", authGuard);
 slackInstall.get("/install", (c) => {
   const orgId = c.get("orgId");
   const redirectUri = `${c.env.APP_URL}/slack/oauth/callback`;
-  const state = orgId; // Pass orgId through OAuth state
+
+  // Generate a random CSRF nonce and store orgId + nonce in a cookie
+  const nonce = crypto.randomUUID();
+  const state = `${orgId}:${nonce}`;
+  setCookie(c, "slack_oauth_state", state, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "Lax",
+    path: "/",
+    maxAge: 600, // 10 minutes
+  });
+
   const url = buildInstallUrl(c.env.SLACK_CLIENT_ID, redirectUri, state);
   return c.redirect(url);
 });
@@ -34,8 +46,19 @@ slackInstall.get("/oauth/callback", async (c) => {
     return c.redirect("/app/settings?error=missing_code");
   }
 
+  // Verify state matches the cookie we set
+  const savedState = getCookie(c, "slack_oauth_state");
+  if (!savedState || state !== savedState) {
+    return c.redirect("/app/settings?error=state_mismatch");
+  }
+
+  // Clear the cookie
+  setCookie(c, "slack_oauth_state", "", { maxAge: 0, path: "/" });
+
   const orgId = c.get("orgId");
-  if (state !== orgId) {
+  // Verify the orgId in the state matches the session's active org
+  const stateOrgId = state.split(":")[0];
+  if (stateOrgId !== orgId) {
     return c.redirect("/app/settings?error=state_mismatch");
   }
 
@@ -52,14 +75,11 @@ slackInstall.get("/oauth/callback", async (c) => {
     const db = getDb(c.env.DB);
     const user = c.get("user");
 
-    // Encrypt the bot token (signing secret comes from the Slack app config,
-    // not from OAuth — we'll use a placeholder that the admin sets)
     const encryptedBotToken = await encryptSecret(
       result.access_token,
       c.env.ENCRYPTION_KEY
     );
 
-    // Upsert: if this org already has this Slack team connected, update it
     await db
       .insert(slackInstallations)
       .values({
@@ -68,7 +88,6 @@ slackInstall.get("/oauth/callback", async (c) => {
         slackTeamName: result.team.name,
         botToken: encryptedBotToken,
         botUserId: result.bot_user_id,
-        // Signing secret must be configured separately (from Slack app settings)
         signingSecret: await encryptSecret("placeholder", c.env.ENCRYPTION_KEY),
         installedBy: user.id,
       })
@@ -86,9 +105,7 @@ slackInstall.get("/oauth/callback", async (c) => {
     return c.redirect("/app/settings?slack=connected");
   } catch (err) {
     console.error("Slack OAuth error:", err);
-    const msg =
-      err instanceof Error ? err.message : "Unknown error";
-    return c.redirect(`/app/settings?error=${encodeURIComponent(msg)}`);
+    return c.redirect("/app/settings?error=oauth_failed");
   }
 });
 

@@ -30,13 +30,15 @@ export async function webhookVerify(c: Context<Env>, next: Next) {
     c.req.header("x-hub-signature-256") ||
     c.req.header("x-webhook-signature");
 
-  if (signature) {
-    // Strip "sha256=" prefix if present
-    const sig = signature.replace(/^sha256=/, "");
-    const valid = await verifyHmacSignature(source.secret, sig, body);
-    if (!valid) {
-      return c.json({ error: "Invalid webhook signature" }, 401);
-    }
+  if (!signature) {
+    return c.json({ error: "Missing webhook signature" }, 401);
+  }
+
+  // Strip "sha256=" prefix if present
+  const sig = signature.replace(/^sha256=/, "");
+  const valid = await verifyHmacSignature(source.secret, sig, body);
+  if (!valid) {
+    return c.json({ error: "Invalid webhook signature" }, 401);
   }
 
   // Store source on context for downstream use
