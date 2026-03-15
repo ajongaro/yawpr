@@ -363,6 +363,13 @@ dd { font-size: 0.9rem; }
   padding: 4rem 1.5rem 3rem;
   text-align: center;
 }
+.hero-compact {
+  padding: 3rem 1.5rem 2rem;
+}
+.hero-compact .steps {
+  margin-top: 2.5rem;
+  text-align: left;
+}
 .hero-title {
   font-size: 2.75rem;
   font-weight: 800;
@@ -376,7 +383,7 @@ dd { font-size: 0.9rem; }
   font-size: 1.05rem;
   color: var(--text-muted);
   max-width: 540px;
-  margin: 0 auto 2rem;
+  margin: 0 auto 1.5rem;
   line-height: 1.7;
 }
 .hero-actions {
@@ -481,7 +488,7 @@ dd { font-size: 0.9rem; }
 .steps {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
   margin-top: 2rem;
 }
 .step {
