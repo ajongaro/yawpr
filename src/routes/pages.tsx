@@ -7,7 +7,6 @@ import {
   incidentEvents,
   teams,
   members,
-  schedules,
   organizations,
   slackInstallations,
   webhookSources,
@@ -20,8 +19,8 @@ import {
   resolveIncident,
   addComment,
 } from "../services/incident";
-import { getOnCall } from "../services/oncall";
-import { decryptSecret, generateNtfyTopic } from "../lib/crypto";
+import { decryptSecret } from "../lib/crypto";
+import { getOrCreateNtfyTopic } from "../services/ntfy-topic";
 import { checkIncidentLimit, checkTeamLimit } from "../middleware/limits";
 
 // Page components
@@ -33,7 +32,6 @@ import { IncidentDetailPage } from "../views/pages/incident-detail";
 import { IncidentNewPage } from "../views/pages/incident-new";
 import { TeamsPage } from "../views/pages/teams";
 import { TeamDetailPage } from "../views/pages/team-detail";
-import { SchedulesPage } from "../views/pages/schedules";
 import { SettingsPage } from "../views/pages/settings";
 import { WebhooksPage } from "../views/pages/webhooks";
 
@@ -159,24 +157,12 @@ pages.get("/", async (c) => {
     teamName: teamMap.get(i.teamId) || "Unknown",
   }));
 
-  const onCallSummary = [];
-  for (const team of allTeams) {
-    const onCall = await getOnCall(db, orgId, team.id);
-    if (onCall) {
-      onCallSummary.push({
-        teamName: team.name,
-        memberName: onCall.member.displayName,
-      });
-    }
-  }
-
   return c.html(
     <HomePage
       user={user}
       orgName={org.name}
       teams={allTeams}
       activeIncidents={enrichedIncidents}
-      onCallSummary={onCallSummary}
     />
   );
 });
@@ -450,13 +436,15 @@ pages.post("/teams/:id/members", async (c) => {
   const db = getDb(c.env.DB);
   const orgId = c.get("orgId");
   const body = await c.req.parseBody();
+  const slackUserId = (body.slackUserId as string) || null;
+  const ntfyTopic = slackUserId ? await getOrCreateNtfyTopic(db, slackUserId) : undefined;
   await db.insert(members).values({
     orgId,
     teamId: c.req.param("id"),
     displayName: body.displayName as string,
     userId: (body.userId as string) || null,
-    slackUserId: (body.slackUserId as string) || null,
-    ntfyTopic: generateNtfyTopic(),
+    slackUserId,
+    ntfyTopic,
     role: (body.role as "admin" | "member") || "member",
   });
   return c.redirect(`/app/teams/${c.req.param("id")}`);
@@ -471,68 +459,6 @@ pages.post("/teams/:id/members/:memberId/delete", async (c) => {
       and(eq(members.id, c.req.param("memberId")), eq(members.orgId, orgId))
     );
   return c.redirect(`/app/teams/${c.req.param("id")}`);
-});
-
-// ─── Schedules ───────────────────────────────────────────
-
-pages.get("/schedules", async (c) => {
-  const db = getDb(c.env.DB);
-  const user = c.get("user");
-  const orgId = c.get("orgId");
-  const org = c.get("org");
-
-  const allTeams = await db
-    .select()
-    .from(teams)
-    .where(eq(teams.orgId, orgId));
-  const allMembers = await db
-    .select()
-    .from(members)
-    .where(eq(members.orgId, orgId));
-  const allSchedules = await db
-    .select({
-      schedule: schedules,
-      member: members,
-    })
-    .from(schedules)
-    .innerJoin(members, eq(schedules.memberId, members.id))
-    .where(eq(schedules.orgId, orgId))
-    .orderBy(desc(schedules.startTime));
-
-  return c.html(
-    <SchedulesPage
-      user={user}
-      orgName={org.name}
-      teams={allTeams}
-      schedules={allSchedules}
-      members={allMembers}
-    />
-  );
-});
-
-pages.post("/schedules", async (c) => {
-  const db = getDb(c.env.DB);
-  const orgId = c.get("orgId");
-  const body = await c.req.parseBody();
-  await db.insert(schedules).values({
-    orgId,
-    teamId: body.teamId as string,
-    memberId: body.memberId as string,
-    startTime: new Date(body.startTime as string),
-    endTime: new Date(body.endTime as string),
-  });
-  return c.redirect("/app/schedules");
-});
-
-pages.post("/schedules/:id/delete", async (c) => {
-  const db = getDb(c.env.DB);
-  const orgId = c.get("orgId");
-  await db
-    .delete(schedules)
-    .where(
-      and(eq(schedules.id, c.req.param("id")), eq(schedules.orgId, orgId))
-    );
-  return c.redirect("/app/schedules");
 });
 
 // ─── Settings ────────────────────────────────────────────

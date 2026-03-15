@@ -27,10 +27,9 @@ Everything runs through `/yawp`:
 /yawp                              Show all commands
 /yawp setup                       Create a team (wizard modal)
 /yawp teams                       List all teams
-/yawp team @backend               Manage team (add/remove members, schedule, rename, delete)
+/yawp team @backend               Manage team (add/remove members, rename, delete)
 /yawp fire                        Trigger incident (modal with team picker + severity)
 /yawp fire @backend DB is down    Quick-fire shortcut
-/yawp oncall @backend             Who's on call?
 /yawp status                      Active incidents
 /yawp history                     Recent incident history
 ```
@@ -41,7 +40,7 @@ Everything runs through `/yawp`:
 - **Dual-channel alerts** — Slack DMs with interactive buttons + ntfy.sh push notifications
 - **Modal wizards** — team setup, incident triggering, on-call scheduling all use Slack modals
 - **Auto-generated ntfy topics** — each member gets a unique, private push notification topic
-- **On-call schedules** — date/time picker in Slack, no typing required
+- **On-call via teams** — create an `@oncall` team, move people in/out as needed
 - **Webhook ingestion** — CloudWatch, Datadog, or generic JSON webhooks auto-create incidents
 - **Auto-join** — first user creates the org, everyone else auto-joins on sign-in
 - **Audit log** — every incident action (created, acknowledged, resolved, commented) is recorded

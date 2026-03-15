@@ -14,7 +14,7 @@ export const DocsPage: FC = () => {
               <li><a href="#getting-started">Getting Started</a></li>
               <li><a href="#slack-bot">Slack Bot Commands</a></li>
               <li><a href="#teams">Managing Teams</a></li>
-              <li><a href="#on-call">On-Call Schedules</a></li>
+              <li><a href="#on-call">On-Call via Teams</a></li>
               <li><a href="#incidents">Incidents</a></li>
               <li><a href="#ntfy">ntfy Push Notifications</a></li>
               <li><a href="#webhooks">Webhook Ingestion</a></li>
@@ -72,7 +72,7 @@ export const DocsPage: FC = () => {
               </tr>
               <tr>
                 <td><code>/yawp team @slug</code></td>
-                <td>Open the team management modal (add/remove members, schedule on-call, rename, delete)</td>
+                <td>Open the team management modal (add/remove members, rename, delete)</td>
               </tr>
             </tbody>
           </table>
@@ -110,23 +110,6 @@ export const DocsPage: FC = () => {
             </tbody>
           </table>
 
-          <h3>On-Call</h3>
-          <table class="table">
-            <thead>
-              <tr><th>Command</th><th>What it does</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>/yawp oncall @slug</code></td>
-                <td>Check who's currently on call for a team</td>
-              </tr>
-            </tbody>
-          </table>
-          <p>
-            To <em>schedule</em> on-call, use{" "}
-            <code>/yawp team @slug</code> and click <strong>Schedule On-Call</strong>.
-            The modal has date and time pickers — no typing dates.
-          </p>
 
           <h2 id="teams">Managing Teams</h2>
           <p>
@@ -135,23 +118,23 @@ export const DocsPage: FC = () => {
           </p>
           <ul>
             <li><strong>Add Members</strong> — Multi-select from your Slack workspace. Each new member gets a DM with ntfy setup instructions.</li>
-            <li><strong>Remove Member</strong> — Pick from a dropdown. Their schedules are also removed.</li>
-            <li><strong>Schedule On-Call</strong> — Pick a member, start date/time, end date/time.</li>
+            <li><strong>Remove Member</strong> — Pick from a dropdown.</li>
             <li><strong>Rename Team</strong> — Updates the name and slug.</li>
-            <li><strong>Delete Team</strong> — Removes the team, all members, and all schedules. Requires confirmation.</li>
+            <li><strong>Delete Team</strong> — Removes the team and all members. Requires confirmation.</li>
           </ul>
 
-          <h2 id="on-call">On-Call Schedules</h2>
+          <h2 id="on-call">On-Call via Teams</h2>
           <p>
-            Schedules are simple time ranges: a member is on-call from a start
-            date/time to an end date/time. When an incident is triggered,
-            Yawpr checks who is currently on-call for that team.
+            Instead of complex scheduling, use teams as your on-call
+            mechanism. Create a small team like <code>@backend-oncall</code>{" "}
+            with just the person currently on duty. Fire at that team first.
+            If they don't respond, escalate to the full{" "}
+            <code>@backend</code> team.
           </p>
           <p>
-            Schedule on-call via the team management modal
-            (<code>/yawp team @slug</code> → <strong>Schedule On-Call</strong>)
-            or from the <a href="/app/schedules">Schedules page</a> in the web
-            dashboard.
+            Move people in and out of on-call teams with{" "}
+            <code>/yawp team @backend-oncall</code> → Add/Remove Members.
+            Their ntfy topic stays the same — no re-setup needed.
           </p>
 
           <h2 id="incidents">Incidents</h2>
@@ -277,10 +260,6 @@ export const DocsPage: FC = () => {
               <tr><td>GET</td><td>/api/teams/:id/members</td><td>List members</td></tr>
               <tr><td>POST</td><td>/api/teams/:id/members</td><td>Add member</td></tr>
               <tr><td>DELETE</td><td>/api/teams/:tid/members/:mid</td><td>Remove member</td></tr>
-              <tr><td>GET</td><td>/api/schedules/team/:teamId</td><td>List schedules</td></tr>
-              <tr><td>GET</td><td>/api/schedules/team/:teamId/current</td><td>Current on-call</td></tr>
-              <tr><td>POST</td><td>/api/schedules</td><td>Create schedule</td></tr>
-              <tr><td>DELETE</td><td>/api/schedules/:id</td><td>Delete schedule</td></tr>
               <tr><td>POST</td><td>/api/checkout</td><td>Start Stripe checkout ($1M/mo plan)</td></tr>
             </tbody>
           </table>

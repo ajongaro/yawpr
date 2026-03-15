@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import { getDb } from "../../db/client";
 import { teams, members } from "../../db/schema";
-import { generateNtfyTopic } from "../../lib/crypto";
+import { getOrCreateNtfyTopic } from "../../services/ntfy-topic";
 import { sendSlackDM } from "../../services/slack";
 
 // ─── Step 1: Open the "Create a team" modal ──────────────
@@ -156,7 +156,7 @@ export async function handleMembersSelected(
       data.user?.name ||
       slackUserId;
 
-    const ntfyTopic = generateNtfyTopic();
+    const ntfyTopic = await getOrCreateNtfyTopic(db, slackUserId);
 
     await db.insert(members).values({
       orgId,

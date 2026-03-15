@@ -5,8 +5,6 @@ import {
   members,
   incidents,
 } from "../../db/schema";
-import { generateNtfyTopic } from "../../lib/crypto";
-import { getOnCall } from "../../services/oncall";
 
 type DB = ReturnType<typeof getDb>;
 
@@ -54,18 +52,12 @@ export async function openTeamManageModal(
     .from(members)
     .where(and(eq(members.orgId, orgId), eq(members.teamId, teamId)));
 
-  const onCall = await getOnCall(db, orgId, teamId);
-
   const memberLines =
     teamMembers.length > 0
       ? teamMembers
           .map((m) => `• ${m.slackUserId ? `<@${m.slackUserId}>` : m.displayName}`)
           .join("\n")
       : "_No members yet._";
-
-  const onCallText = onCall
-    ? `On call: ${onCall.member.slackUserId ? `<@${onCall.member.slackUserId}>` : onCall.member.displayName}`
-    : "No one on call";
 
   await openModal(botToken, triggerId, {
     type: "modal",
@@ -76,7 +68,7 @@ export async function openTeamManageModal(
     blocks: [
       {
         type: "section",
-        text: { type: "mrkdwn", text: `*@${team.slug}* · ${teamMembers.length} members · ${onCallText}` },
+        text: { type: "mrkdwn", text: `*@${team.slug}* · ${teamMembers.length} members` },
       },
       { type: "divider" },
       {
@@ -98,11 +90,6 @@ export async function openTeamManageModal(
             type: "button",
             text: pt("Remove Member"),
             action_id: "team_remove_member",
-          },
-          {
-            type: "button",
-            text: pt("Schedule On-Call"),
-            action_id: "team_schedule_oncall",
           },
           {
             type: "button",
@@ -197,81 +184,6 @@ export async function openRemoveMemberModal(
           action_id: "value",
           options,
         },
-      },
-    ],
-  });
-}
-
-// ─── Schedule on-call modal ─────────────────────────────
-
-export async function openScheduleOncallModal(
-  botToken: string,
-  triggerId: string,
-  orgId: string,
-  teamId: string,
-  db: DB
-) {
-  const teamMembers = await db
-    .select()
-    .from(members)
-    .where(and(eq(members.orgId, orgId), eq(members.teamId, teamId)));
-
-  if (teamMembers.length === 0) {
-    await openModal(botToken, triggerId, {
-      type: "modal",
-      title: pt("No members"),
-      close: pt("OK"),
-      blocks: [{ type: "section", text: { type: "mrkdwn", text: "Add members to this team first." } }],
-    });
-    return;
-  }
-
-  const memberOptions = teamMembers.map((m) => ({
-    text: pt(m.displayName),
-    value: m.id,
-  }));
-
-  await openModal(botToken, triggerId, {
-    type: "modal",
-    callback_id: "schedule_oncall_submit",
-    private_metadata: meta({ orgId, teamId }),
-    title: pt("Schedule on-call"),
-    submit: pt("Schedule"),
-    close: pt("Cancel"),
-    blocks: [
-      {
-        type: "input",
-        block_id: "oncall_member",
-        label: pt("Who's on call?"),
-        element: {
-          type: "static_select",
-          action_id: "value",
-          options: memberOptions,
-        },
-      },
-      {
-        type: "input",
-        block_id: "start_date",
-        label: pt("Start date"),
-        element: { type: "datepicker", action_id: "value" },
-      },
-      {
-        type: "input",
-        block_id: "start_time",
-        label: pt("Start time"),
-        element: { type: "timepicker", action_id: "value" },
-      },
-      {
-        type: "input",
-        block_id: "end_date",
-        label: pt("End date"),
-        element: { type: "datepicker", action_id: "value" },
-      },
-      {
-        type: "input",
-        block_id: "end_time",
-        label: pt("End time"),
-        element: { type: "timepicker", action_id: "value" },
       },
     ],
   });

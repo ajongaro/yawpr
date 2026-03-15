@@ -3,20 +3,20 @@ import { eq, and } from "drizzle-orm";
 import type { Env } from "../../lib/types";
 import { slackVerify } from "../../middleware/slack-verify";
 import { getDb } from "../../db/client";
-import { members, incidents, teams, schedules } from "../../db/schema";
+import { members, incidents, teams } from "../../db/schema";
 import {
   acknowledgeIncident,
   resolveIncident,
   createIncident,
 } from "../../services/incident";
-import { decryptSecret, generateNtfyTopic } from "../../lib/crypto";
+import { decryptSecret } from "../../lib/crypto";
+import { getOrCreateNtfyTopic } from "../../services/ntfy-topic";
 import { SEVERITY_EMOJI } from "../../lib/constants";
 import { handleTeamCreated, handleMembersSelected } from "./setup-wizard";
 import { sendSlackDM } from "../../services/slack";
 import {
   openAddMembersModal,
   openRemoveMemberModal,
-  openScheduleOncallModal,
   openRenameTeamModal,
   openDeleteTeamModal,
 } from "./modals";
@@ -126,7 +126,7 @@ slackInteractions.post("/", async (c) => {
           userData.user?.name ||
           slackUserId;
 
-        const ntfyTopic = generateNtfyTopic();
+        const ntfyTopic = await getOrCreateNtfyTopic(db, slackUserId);
         await db.insert(members).values({
           orgId: metadata.orgId,
           teamId: metadata.teamId,
@@ -178,17 +178,6 @@ slackInteractions.post("/", async (c) => {
         });
       }
 
-      // Remove their schedules
-      await db
-        .delete(schedules)
-        .where(
-          and(
-            eq(schedules.orgId, metadata.orgId),
-            eq(schedules.teamId, metadata.teamId),
-            eq(schedules.memberId, memberId)
-          )
-        );
-
       await db.delete(members).where(eq(members.id, memberId));
 
       return c.json({
@@ -201,71 +190,6 @@ slackInteractions.post("/", async (c) => {
             {
               type: "section",
               text: { type: "mrkdwn", text: "Member has been removed from the team." },
-            },
-          ],
-        },
-      });
-    }
-
-    // ─── Schedule on-call submission ─────────────────────
-    if (callbackId === "schedule_oncall_submit") {
-      const memberId =
-        payload.view.state.values.oncall_member.value.selected_option?.value;
-      const startDate =
-        payload.view.state.values.start_date.value.selected_date;
-      const startTime =
-        payload.view.state.values.start_time.value.selected_time;
-      const endDate =
-        payload.view.state.values.end_date.value.selected_date;
-      const endTime =
-        payload.view.state.values.end_time.value.selected_time;
-
-      if (!memberId || !startDate || !startTime || !endDate || !endTime) {
-        return c.json({
-          response_action: "errors",
-          errors: { oncall_member: "All fields are required." },
-        });
-      }
-
-      const start = new Date(`${startDate}T${startTime}:00`);
-      const end = new Date(`${endDate}T${endTime}:00`);
-
-      if (end <= start) {
-        return c.json({
-          response_action: "errors",
-          errors: { end_date: "End must be after start." },
-        });
-      }
-
-      await db.insert(schedules).values({
-        orgId: metadata.orgId,
-        teamId: metadata.teamId,
-        memberId,
-        startTime: start,
-        endTime: end,
-      });
-
-      const fmtOpts: Intl.DateTimeFormatOptions = {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      };
-
-      return c.json({
-        response_action: "update",
-        view: {
-          type: "modal",
-          title: { type: "plain_text", text: "Scheduled" },
-          close: { type: "plain_text", text: "Done" },
-          blocks: [
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: `On-call scheduled:\n${start.toLocaleString("en-US", fmtOpts)} → ${end.toLocaleString("en-US", fmtOpts)}`,
-              },
             },
           ],
         },
@@ -315,15 +239,7 @@ slackInteractions.post("/", async (c) => {
 
     // ─── Delete team submission ──────────────────────────
     if (callbackId === "team_delete_submit") {
-      // Delete schedules, members, then team
-      await db
-        .delete(schedules)
-        .where(
-          and(
-            eq(schedules.orgId, metadata.orgId),
-            eq(schedules.teamId, metadata.teamId)
-          )
-        );
+      // Delete members, then team
       await db
         .delete(members)
         .where(
@@ -432,7 +348,6 @@ slackInteractions.post("/", async (c) => {
     const teamManageActions = [
       "team_add_members",
       "team_remove_member",
-      "team_schedule_oncall",
       "team_rename",
       "team_delete",
     ];
@@ -449,8 +364,6 @@ slackInteractions.post("/", async (c) => {
         await openAddMembersModal(botToken, triggerId, metadata.orgId, metadata.teamId);
       } else if (action.action_id === "team_remove_member") {
         await openRemoveMemberModal(botToken, triggerId, metadata.orgId, metadata.teamId, db);
-      } else if (action.action_id === "team_schedule_oncall") {
-        await openScheduleOncallModal(botToken, triggerId, metadata.orgId, metadata.teamId, db);
       } else if (action.action_id === "team_rename") {
         await openRenameTeamModal(botToken, triggerId, metadata.orgId, metadata.teamId, db);
       } else if (action.action_id === "team_delete") {

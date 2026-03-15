@@ -6,7 +6,7 @@ import type { Env } from "../../lib/types";
 import { getDb } from "../../db/client";
 import { teams, members } from "../../db/schema";
 import { checkTeamLimit, checkMemberLimit } from "../../middleware/limits";
-import { generateNtfyTopic } from "../../lib/crypto";
+import { getOrCreateNtfyTopic } from "../../services/ntfy-topic";
 
 const teamsApi = new Hono<Env>();
 
@@ -130,7 +130,7 @@ teamsApi.post(
 
     const [member] = await db
       .insert(members)
-      .values({ ...data, orgId, teamId, ntfyTopic: generateNtfyTopic() })
+      .values({ ...data, orgId, teamId, ntfyTopic: data.slackUserId ? await getOrCreateNtfyTopic(db, data.slackUserId) : undefined })
       .returning();
     return c.json(member, 201);
   }

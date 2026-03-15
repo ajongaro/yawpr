@@ -7,7 +7,6 @@ import { teams, incidents } from "../../db/schema";
 import { createIncident } from "../../services/incident";
 import { decryptSecret } from "../../lib/crypto";
 import { SEVERITY_EMOJI } from "../../lib/constants";
-import { getOnCall } from "../../services/oncall";
 import { openSetupWizard, openFireModal } from "./setup-wizard";
 import { openTeamManageModal, openHistoryModal } from "./modals";
 
@@ -50,9 +49,6 @@ slackCommands.post("/", async (c) => {
         "`/yawp fire @slug <message>` — Quick-fire an incident",
         "`/yawp status` — Show active incidents",
         "`/yawp history` — Recent incident history",
-        "",
-        "*On-Call*",
-        "`/yawp oncall @slug` — Who's on call right now?",
       ].join("\n"),
     });
   }
@@ -128,53 +124,6 @@ slackCommands.post("/", async (c) => {
     return c.json({
       response_type: "ephemeral",
       text: `Opening *${team.name}* management...`,
-    });
-  }
-
-  // ─── /yawp oncall @slug — check who's on call ──────────
-  if (subcommand === "oncall") {
-    const teamSlug = (parts[1] || "").replace(/^@/, "").toLowerCase();
-    if (!teamSlug) {
-      return c.json({
-        response_type: "ephemeral",
-        text: "Usage: `/yawp oncall @slug` — Who's on call?\nTo schedule on-call, use `/yawp team @slug` and click *Schedule On-Call*.",
-      });
-    }
-
-    const [team] = await db
-      .select()
-      .from(teams)
-      .where(and(eq(teams.orgId, orgId), eq(teams.slug, teamSlug)));
-
-    if (!team) {
-      return c.json({
-        response_type: "ephemeral",
-        text: `Team \`@${teamSlug}\` not found.`,
-      });
-    }
-
-    const onCall = await getOnCall(db, orgId, team.id);
-    if (!onCall) {
-      return c.json({
-        response_type: "ephemeral",
-        text: `No one is currently on call for *${team.name}*.\nSchedule someone via \`/yawp team @${team.slug}\` → *Schedule On-Call*.`,
-      });
-    }
-
-    const memberName = onCall.member.slackUserId
-      ? `<@${onCall.member.slackUserId}>`
-      : onCall.member.displayName;
-    const endStr = onCall.schedule.endTime.toLocaleString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-
-    return c.json({
-      response_type: "ephemeral",
-      text: `${memberName} is on call for *${team.name}* until ${endStr}.`,
     });
   }
 

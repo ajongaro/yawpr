@@ -16,17 +16,11 @@ type Incident = {
   teamName?: string;
 };
 
-type OnCallInfo = {
-  teamName: string;
-  memberName: string;
-};
-
 type HomePageProps = {
   user: any;
   orgName: string;
   teams: Team[];
   activeIncidents: Incident[];
-  onCallSummary: OnCallInfo[];
 };
 
 export const HomePage: FC<HomePageProps> = ({
@@ -34,7 +28,6 @@ export const HomePage: FC<HomePageProps> = ({
   orgName,
   teams,
   activeIncidents,
-  onCallSummary,
 }) => {
   return (
     <Layout title="Dashboard" user={user} orgName={orgName}>
@@ -43,7 +36,7 @@ export const HomePage: FC<HomePageProps> = ({
         <div class="yawp-box card">
           <h2>Send a Yawp</h2>
           <p class="text-muted">
-            Alert the on-call person. Their phone will go off.
+            Alert the team. Their phones will go off.
           </p>
           {teams.length === 0 ? (
             <p class="empty-state">
@@ -78,35 +71,7 @@ export const HomePage: FC<HomePageProps> = ({
           )}
         </div>
 
-        {/* ─── On-Call summary ─── */}
-        <section class="dashboard-section">
-          <h2>On-Call Now</h2>
-          {onCallSummary.length === 0 ? (
-            <p class="empty-state">
-              No on-call schedules configured.{" "}
-              <a href="/app/schedules">Set up schedules</a>
-            </p>
-          ) : (
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Team</th>
-                  <th>On-Call</th>
-                </tr>
-              </thead>
-              <tbody>
-                {onCallSummary.map((entry) => (
-                  <tr>
-                    <td>{entry.teamName}</td>
-                    <td>{entry.memberName}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </section>
-
-        {/* ─── Recent alerts ─── */}
+        {/* ─── Active incidents ─── */}
         {activeIncidents.length > 0 && (
           <section class="dashboard-section">
             <div class="dashboard-header">

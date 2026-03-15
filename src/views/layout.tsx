@@ -28,7 +28,6 @@ export const Layout: FC<LayoutProps> = ({ title, children, user, orgName }) => {
           <div class="nav-links">
             <a href="/app">Home</a>
             <a href="/app/teams">Teams</a>
-            <a href="/app/schedules">Schedules</a>
             <a href="/app/incidents">History</a>
             <a href="/app/settings">Settings</a>
             {user ? (

@@ -5,7 +5,6 @@ import { errorHandler } from "./middleware/error-handler";
 import { authRoutes } from "./routes/auth/index";
 import { incidentsApi } from "./routes/api/incidents";
 import { teamsApi } from "./routes/api/teams";
-import { schedulesApi } from "./routes/api/schedules";
 import { slackInstall } from "./routes/slack/install";
 import { slackCommands } from "./routes/slack/commands";
 import { slackInteractions } from "./routes/slack/interactions";
@@ -30,10 +29,8 @@ app.route("/api/auth", authRoutes);
 // ─── API routes (protected) ─────────────────────────────
 app.use("/api/teams/*", authGuard);
 app.use("/api/incidents/*", authGuard);
-app.use("/api/schedules/*", authGuard);
 app.route("/api/teams", teamsApi);
 app.route("/api/incidents", incidentsApi);
-app.route("/api/schedules", schedulesApi);
 app.route("/api/checkout", checkoutApi);
 
 // ─── Slack routes (commands/interactions before install — install has authGuard wildcard)
