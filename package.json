@@ -1,7 +1,7 @@
 {
   "name": "yawpr",
   "version": "2.0.0",
-  "description": "Dev team alerting platform",
+  "description": "Alert your people, eh.",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
