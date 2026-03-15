@@ -4,6 +4,7 @@ type ParsedWebhook = {
   severity: IncidentSeverity;
   title: string;
   description: string;
+  dedupKey?: string;
 };
 
 /** Parse a Datadog webhook payload */
@@ -34,7 +35,14 @@ export function parseDatadog(
       severity = defaultSeverity;
     }
 
-    return { severity, title, description };
+    // Dedup by alert ID or event ID if available
+    const dedupKey = data.alert_id
+      ? `datadog:${data.alert_id}`
+      : data.id
+        ? `datadog:${data.id}`
+        : undefined;
+
+    return { severity, title, description, dedupKey };
   } catch {
     return null;
   }

@@ -3,7 +3,7 @@ import { eq, and, desc, ne } from "drizzle-orm";
 import type { Env } from "../../lib/types";
 import { slackVerify } from "../../middleware/slack-verify";
 import { getDb } from "../../db/client";
-import { teams, incidents } from "../../db/schema";
+import { teams, members, incidents } from "../../db/schema";
 import { createIncident } from "../../services/incident";
 import { decryptSecret } from "../../lib/crypto";
 import { SEVERITY_EMOJI } from "../../lib/constants";
@@ -49,6 +49,9 @@ slackCommands.post("/", async (c) => {
         "`/yawp fire @slug <message>` — Quick-fire an incident",
         "`/yawp status` — Show active incidents",
         "`/yawp history` — Recent incident history",
+        "",
+        "*Account*",
+        "`/yawp mytopic` — DM yourself your ntfy push notification topic",
       ].join("\n"),
     });
   }
@@ -60,6 +63,37 @@ slackCommands.post("/", async (c) => {
     return c.json({
       response_type: "ephemeral",
       text: "Opening setup wizard...",
+    });
+  }
+
+  // ─── /yawp mytopic — DM yourself your ntfy topic ────────
+  if (subcommand === "mytopic") {
+    const [member] = await db
+      .select()
+      .from(members)
+      .where(
+        and(eq(members.orgId, orgId), eq(members.slackUserId, userId))
+      )
+      .limit(1);
+
+    if (!member?.ntfyTopic) {
+      return c.json({
+        response_type: "ephemeral",
+        text: "You don't have an ntfy topic yet. Ask your team admin to add you to a team.",
+      });
+    }
+
+    const botToken = await getBotToken();
+    const { sendSlackDM } = await import("../../services/slack");
+    await sendSlackDM(
+      botToken,
+      userId,
+      `Your ntfy topic: \`${member.ntfyTopic}\`\n\nSubscribe to this in the <https://ntfy.sh|ntfy app> to get push notifications.`
+    );
+
+    return c.json({
+      response_type: "ephemeral",
+      text: "Check your DMs — I sent you your ntfy topic.",
     });
   }
 

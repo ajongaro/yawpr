@@ -4,6 +4,7 @@ type ParsedWebhook = {
   severity: IncidentSeverity;
   title: string;
   description: string;
+  dedupKey?: string;
 };
 
 /** Parse a CloudWatch alarm delivered via SNS */
@@ -47,7 +48,10 @@ export function parseCloudWatch(
       ? `Metric: ${metric}\n${reason}`
       : reason;
 
-    return { severity, title, description };
+    // Dedup by alarm name — repeated firings of the same alarm won't create duplicates
+    const dedupKey = `cloudwatch:${alarmName}`;
+
+    return { severity, title, description, dedupKey };
   } catch {
     return null;
   }

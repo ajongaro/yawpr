@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import type { Database } from "../db/client";
 import { incidents, incidentEvents, teams } from "../db/schema";
 import { enqueueNotifications } from "./notify";
@@ -12,6 +12,7 @@ type CreateIncidentInput = {
   description?: string;
   source: IncidentSource;
   createdBy?: string;
+  dedupKey?: string;
 };
 
 export async function createIncident(
@@ -20,6 +21,25 @@ export async function createIncident(
   appUrl: string,
   input: CreateIncidentInput
 ) {
+  // If a dedup key is provided, check for an existing active incident
+  if (input.dedupKey) {
+    const [existing] = await db
+      .select()
+      .from(incidents)
+      .where(
+        and(
+          eq(incidents.orgId, input.orgId),
+          eq(incidents.dedupKey, input.dedupKey),
+          ne(incidents.status, "resolved")
+        )
+      );
+
+    if (existing) {
+      // Duplicate — return the existing incident without creating a new one
+      return existing;
+    }
+  }
+
   const [incident] = await db
     .insert(incidents)
     .values({
@@ -30,6 +50,7 @@ export async function createIncident(
       description: input.description,
       source: input.source,
       createdBy: input.createdBy,
+      dedupKey: input.dedupKey,
     })
     .returning();
 

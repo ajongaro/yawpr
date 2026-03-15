@@ -32,7 +32,7 @@ webhookIngest.post("/:sourceId/ingest", webhookVerify, async (c) => {
   const defaultSeverity = source.severityDefault as IncidentSeverity;
 
   // Parse based on source type
-  let parsed: { severity: IncidentSeverity; title: string; description: string } | null = null;
+  let parsed: { severity: IncidentSeverity; title: string; description: string; dedupKey?: string } | null = null;
 
   switch (source.sourceType) {
     case "cloudwatch":
@@ -69,6 +69,7 @@ webhookIngest.post("/:sourceId/ingest", webhookVerify, async (c) => {
       description: parsed.description,
       source: "webhook",
       createdBy: `webhook:${source.id}`,
+      dedupKey: parsed.dedupKey,
     }
   );
 

@@ -24,6 +24,20 @@ export async function webhookVerify(c: Context<Env>, next: Next) {
   const body = await c.req.text();
   c.set("rawBody", body);
 
+  // Allow SNS subscription confirmations through without signature —
+  // they don't create incidents and the SubscribeURL is domain-validated
+  // downstream. SNS doesn't support custom HMAC signing.
+  try {
+    const data = JSON.parse(body);
+    if (data.Type === "SubscriptionConfirmation" && data.SubscribeURL) {
+      (c as any).webhookSource = source;
+      await next();
+      return;
+    }
+  } catch {
+    // Not JSON — continue to signature check
+  }
+
   // Check for HMAC signature in common header locations
   const signature =
     c.req.header("x-signature-256") ||
@@ -41,7 +55,6 @@ export async function webhookVerify(c: Context<Env>, next: Next) {
     return c.json({ error: "Invalid webhook signature" }, 401);
   }
 
-  // Store source on context for downstream use
   (c as any).webhookSource = source;
   await next();
 }

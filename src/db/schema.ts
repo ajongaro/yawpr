@@ -211,6 +211,7 @@ export const incidents = sqliteTable(
     })
       .notNull()
       .default("active"),
+    dedupKey: text("dedup_key"),
     createdBy: text("created_by"),
     createdAt: integer("created_at", { mode: "timestamp" })
       .notNull()
