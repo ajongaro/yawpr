@@ -210,3 +210,116 @@ export async function handleMembersSelected(
     },
   };
 }
+
+// ─── Fire modal ─────────────────────────────────────────
+
+export async function openFireModal(
+  botToken: string,
+  triggerId: string,
+  orgId: string,
+  defaultSeverity?: string,
+  db?: ReturnType<typeof getDb>
+) {
+  // Fetch teams for the dropdown
+  const teamList = db
+    ? await db.select().from(teams).where(eq(teams.orgId, orgId))
+    : [];
+
+  const teamOptions = teamList.map((t) => ({
+    text: { type: "plain_text" as const, text: t.name },
+    value: t.id,
+  }));
+
+  if (teamOptions.length === 0) {
+    // No teams — can't fire. Tell them to set up first.
+    const res = await fetch("https://slack.com/api/views.open", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${botToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        trigger_id: triggerId,
+        view: {
+          type: "modal",
+          title: { type: "plain_text", text: "No teams yet" },
+          close: { type: "plain_text", text: "OK" },
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: "You need to create a team first.\nRun `/yawp setup` to get started.",
+              },
+            },
+          ],
+        },
+      }),
+    });
+    return;
+  }
+
+  const severityOptions = [
+    { text: { type: "plain_text" as const, text: "🔥 Fire — bypasses DND" }, value: "fire" },
+    { text: { type: "plain_text" as const, text: "⚠️ Warning" }, value: "warning" },
+    { text: { type: "plain_text" as const, text: "ℹ️ Info" }, value: "info" },
+  ];
+
+  const initialSeverity = defaultSeverity && ["fire", "warning", "info"].includes(defaultSeverity)
+    ? severityOptions.find((o) => o.value === defaultSeverity)
+    : undefined;
+
+  const view = {
+    type: "modal" as const,
+    callback_id: "fire_incident",
+    private_metadata: JSON.stringify({ orgId }),
+    title: { type: "plain_text" as const, text: "Trigger an incident" },
+    submit: { type: "plain_text" as const, text: "Send it" },
+    close: { type: "plain_text" as const, text: "Cancel" },
+    blocks: [
+      {
+        type: "input",
+        block_id: "team",
+        label: { type: "plain_text" as const, text: "Team" },
+        element: {
+          type: "static_select",
+          action_id: "value",
+          placeholder: { type: "plain_text" as const, text: "Select a team..." },
+          options: teamOptions,
+        },
+      },
+      {
+        type: "input",
+        block_id: "severity",
+        label: { type: "plain_text" as const, text: "Severity" },
+        element: {
+          type: "static_select",
+          action_id: "value",
+          options: severityOptions,
+          ...(initialSeverity ? { initial_option: initialSeverity } : {}),
+        },
+      },
+      {
+        type: "input",
+        block_id: "title",
+        label: { type: "plain_text" as const, text: "What's happening?" },
+        element: {
+          type: "plain_text_input",
+          action_id: "value",
+          placeholder: { type: "plain_text" as const, text: "DB is down, API returning 500s, etc." },
+        },
+      },
+    ],
+  };
+
+  const res = await fetch("https://slack.com/api/views.open", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${botToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ trigger_id: triggerId, view }),
+  });
+  const data = (await res.json()) as any;
+  if (!data.ok) throw new Error(`views.open failed: ${data.error}`);
+}

@@ -3,12 +3,14 @@ import { eq } from "drizzle-orm";
 import type { Env } from "../../lib/types";
 import { slackVerify } from "../../middleware/slack-verify";
 import { getDb } from "../../db/client";
-import { members, incidents } from "../../db/schema";
+import { members, incidents, teams } from "../../db/schema";
 import {
   acknowledgeIncident,
   resolveIncident,
+  createIncident,
 } from "../../services/incident";
 import { decryptSecret } from "../../lib/crypto";
+import { SEVERITY_EMOJI } from "../../lib/constants";
 import { handleTeamCreated, handleMembersSelected } from "./setup-wizard";
 
 const slackInteractions = new Hono<Env>();
@@ -71,6 +73,70 @@ slackInteractions.post("/", async (c) => {
           db
         )
       );
+    }
+
+    if (callbackId === "fire_incident") {
+      const teamId =
+        payload.view.state.values.team.value.selected_option?.value;
+      const severity =
+        payload.view.state.values.severity.value.selected_option?.value;
+      const title =
+        payload.view.state.values.title.value.value;
+
+      if (!teamId || !severity || !title) {
+        return c.json({
+          response_action: "errors",
+          errors: { title: "All fields are required." },
+        });
+      }
+
+      const [team] = await db
+        .select()
+        .from(teams)
+        .where(eq(teams.id, teamId));
+
+      const incident = await createIncident(
+        db,
+        c.env.NOTIFICATION_QUEUE,
+        c.env.APP_URL,
+        {
+          orgId: metadata.orgId,
+          teamId,
+          severity: severity as "fire" | "warning" | "info",
+          title,
+          source: "slack",
+          createdBy: payload.user.id,
+          botToken,
+        }
+      );
+
+      const emoji = SEVERITY_EMOJI[severity] || "ℹ️";
+      const teamName = team?.name || teamId;
+
+      // Post the incident to the user's current channel via chat.postMessage
+      // Since we're in a modal we don't have a channel context, so DM the user
+      // with the incident and ack/resolve buttons
+      const { sendSlackDM } = await import("../../services/slack");
+      await sendSlackDM(botToken, payload.user.id, `${emoji} *${title}*\nTeam: *${teamName}* | <${c.env.APP_URL}/app/incidents/${incident.id}|View in dashboard>`);
+
+      return c.json({
+        response_action: "update",
+        view: {
+          type: "modal",
+          callback_id: "fire_done",
+          title: { type: "plain_text", text: "Incident triggered" },
+          close: { type: "plain_text", text: "Done" },
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `${emoji} *${title}*\n\nTeam *${teamName}* has been notified. Members will receive Slack DMs and ntfy push notifications.\n\n<${c.env.APP_URL}/app/incidents/${incident.id}|View in dashboard>`,
+              },
+            },
+          ],
+        },
+      });
     }
 
     return c.json({ ok: true });

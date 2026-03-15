@@ -41,19 +41,19 @@ export const IncidentsListPage: FC<IncidentsListPageProps> = ({
           All
         </a>
         <a
-          href="/incidents?status=active"
+          href="/app/incidents?status=active"
           class={`filter-btn ${currentFilter === "active" ? "active" : ""}`}
         >
           Active
         </a>
         <a
-          href="/incidents?status=acknowledged"
+          href="/app/incidents?status=acknowledged"
           class={`filter-btn ${currentFilter === "acknowledged" ? "active" : ""}`}
         >
           Acknowledged
         </a>
         <a
-          href="/incidents?status=resolved"
+          href="/app/incidents?status=resolved"
           class={`filter-btn ${currentFilter === "resolved" ? "active" : ""}`}
         >
           Resolved

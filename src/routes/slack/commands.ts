@@ -8,7 +8,7 @@ import { createIncident } from "../../services/incident";
 import { decryptSecret, generateNtfyTopic } from "../../lib/crypto";
 import { SEVERITY_EMOJI } from "../../lib/constants";
 import { getOnCall } from "../../services/oncall";
-import { openSetupWizard } from "./setup-wizard";
+import { openSetupWizard, openFireModal } from "./setup-wizard";
 import { sendSlackDM } from "../../services/slack";
 
 const slackCommands = new Hono<Env>();
@@ -67,6 +67,19 @@ slackCommands.post("/", async (c) => {
     return c.json({
       response_type: "ephemeral",
       text: "Opening setup wizard...",
+    });
+  }
+
+  // ─── /yawp fire|warning|info (no args) — open fire modal ─
+  if (
+    ["fire", "warning", "info"].includes(subcommand) &&
+    parts.length === 1
+  ) {
+    const botToken = await getBotToken();
+    await openFireModal(botToken, triggerId, orgId, subcommand, db);
+    return c.json({
+      response_type: "ephemeral",
+      text: "Opening incident form...",
     });
   }
 
