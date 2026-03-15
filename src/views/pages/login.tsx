@@ -32,7 +32,7 @@ export const LoginPage: FC = () => {
     <Layout title="Sign In">
       <div class="login-container">
         <div class="login-card">
-          <h1>Yawp'r</h1>
+          <h1>Yawpr</h1>
           <p>Dev team alerting — bat signal for when fires happen.</p>
           <button id="slack-login" class="btn btn-primary btn-lg">
             Sign in with Slack

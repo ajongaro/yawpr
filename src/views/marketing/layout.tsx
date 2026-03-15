@@ -14,13 +14,16 @@ export const MarketingLayout: FC<MarketingLayoutProps> = ({
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{title ? `${title} — Yawp'r` : "Yawp'r — Dev Team Alerting"}</title>
+        <title>{title ? `${title} — Yawpr` : "Yawpr — Dev Team Alerting"}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet" />
         <link rel="stylesheet" href="/static/styles.css" />
       </head>
       <body>
         <nav class="nav">
           <div class="nav-brand">
-            <a href="/">Yawp'r</a>
+            <a href="/">Yawpr</a>
           </div>
           <div class="nav-links">
             <a href="/pricing">Pricing</a>
@@ -33,7 +36,7 @@ export const MarketingLayout: FC<MarketingLayoutProps> = ({
         <main>{children}</main>
         <footer class="marketing-footer">
           <div class="container">
-            <p class="text-muted">Yawp'r — Dev team alerting.</p>
+            <p class="text-muted">Yawpr — Dev team alerting.</p>
           </div>
         </footer>
       </body>

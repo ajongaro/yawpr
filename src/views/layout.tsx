@@ -13,13 +13,16 @@ export const Layout: FC<LayoutProps> = ({ title, children, user, orgName }) => {
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{title ? `${title} — Yawp'r` : "Yawp'r"}</title>
+        <title>{title ? `${title} — Yawpr` : "Yawpr"}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet" />
         <link rel="stylesheet" href="/static/styles.css" />
       </head>
       <body>
         <nav class="nav">
           <div class="nav-brand">
-            <a href="/app">Yawp'r</a>
+            <a href="/app">Yawpr</a>
             {orgName && <span class="nav-org">{orgName}</span>}
           </div>
           <div class="nav-links">

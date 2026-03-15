@@ -10,7 +10,7 @@ export const OnboardingPage: FC<OnboardingPageProps> = ({ user, error }) => {
   return (
     <Layout title="Get Started" user={user}>
       <div class="onboarding">
-        <h1>Welcome to Yawp'r</h1>
+        <h1>Welcome to Yawpr</h1>
         <p>Create your organization to get started.</p>
 
         {error && <div class="error-banner">{error}</div>}

@@ -24,7 +24,7 @@ export const DocsPage: FC = () => {
 
           <h2 id="getting-started">Getting Started</h2>
           <p>
-            Everything in Yawp'r happens through Slack. Here's the full setup:
+            Everything in Yawpr happens through Slack. Here's the full setup:
           </p>
           <ol class="how-it-works">
             <li>
@@ -36,7 +36,7 @@ export const DocsPage: FC = () => {
             <li>
               <strong>Install the Slack app</strong> — From{" "}
               <a href="/app/settings">Settings</a>, click "Connect Slack" to
-              add the Yawp'r bot to your workspace.
+              add the Yawpr bot to your workspace.
             </li>
             <li>
               <strong>Create a team</strong> — In Slack, type{" "}
@@ -145,7 +145,7 @@ export const DocsPage: FC = () => {
           <p>
             Schedules are simple time ranges: a member is on-call from a start
             date/time to an end date/time. When an incident is triggered,
-            Yawp'r checks who is currently on-call for that team.
+            Yawpr checks who is currently on-call for that team.
           </p>
           <p>
             Schedule on-call via the team management modal
@@ -186,7 +186,7 @@ export const DocsPage: FC = () => {
           <h2 id="ntfy">ntfy Push Notifications</h2>
           <p>
             <a href="https://ntfy.sh">ntfy</a> is a free push notification
-            service. When you're added to a team, Yawp'r auto-generates a
+            service. When you're added to a team, Yawpr auto-generates a
             unique, private topic for you and DMs you the setup instructions:
           </p>
           <ol>
@@ -227,12 +227,12 @@ export const DocsPage: FC = () => {
           <dl>
             <dt>CloudWatch (via SNS)</dt>
             <dd>
-              Point an SNS topic at the ingest URL. Yawp'r auto-confirms the
+              Point an SNS topic at the ingest URL. Yawpr auto-confirms the
               subscription and parses alarm name, state, and metric.
             </dd>
             <dt>Datadog</dt>
             <dd>
-              Configure a Datadog webhook integration. Yawp'r extracts event
+              Configure a Datadog webhook integration. Yawpr extracts event
               title, body, and maps priority to severity.
             </dd>
             <dt>Generic JSON</dt>
