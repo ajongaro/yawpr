@@ -6,6 +6,7 @@ import type { Env } from "../../lib/types";
 import { getDb } from "../../db/client";
 import { teams, members } from "../../db/schema";
 import { checkTeamLimit, checkMemberLimit } from "../../middleware/limits";
+import { generateNtfyTopic } from "../../lib/crypto";
 
 const teamsApi = new Hono<Env>();
 
@@ -19,7 +20,6 @@ const addMemberSchema = z.object({
   displayName: z.string().min(1),
   userId: z.string().optional(),
   slackUserId: z.string().optional(),
-  ntfyTopic: z.string().optional(),
   role: z.enum(["admin", "member"]).default("member"),
 });
 
@@ -130,7 +130,7 @@ teamsApi.post(
 
     const [member] = await db
       .insert(members)
-      .values({ ...data, orgId, teamId })
+      .values({ ...data, orgId, teamId, ntfyTopic: generateNtfyTopic() })
       .returning();
     return c.json(member, 201);
   }

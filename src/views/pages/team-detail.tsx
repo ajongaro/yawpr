@@ -62,11 +62,6 @@ export const TeamDetailPage: FC<TeamDetailPageProps> = ({
             name="slackUserId"
             placeholder="Slack User ID"
           />
-          <input
-            type="text"
-            name="ntfyTopic"
-            placeholder="Personal ntfy topic"
-          />
           <select name="role">
             <option value="member">Member</option>
             <option value="admin">Admin</option>
@@ -94,7 +89,13 @@ export const TeamDetailPage: FC<TeamDetailPageProps> = ({
                 <tr>
                   <td>{m.displayName}</td>
                   <td>{m.slackUserId || "—"}</td>
-                  <td>{m.ntfyTopic || "—"}</td>
+                  <td>
+                    {m.ntfyTopic ? (
+                      <code class="ntfy-topic">{m.ntfyTopic}</code>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
                   <td>{m.role}</td>
                   <td>
                     <form

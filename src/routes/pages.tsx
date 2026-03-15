@@ -21,7 +21,7 @@ import {
   addComment,
 } from "../services/incident";
 import { getOnCall } from "../services/oncall";
-import { decryptSecret } from "../lib/crypto";
+import { decryptSecret, generateNtfyTopic } from "../lib/crypto";
 import { checkIncidentLimit, checkTeamLimit } from "../middleware/limits";
 
 // Page components
@@ -450,7 +450,7 @@ pages.post("/teams/:id/members", async (c) => {
     displayName: body.displayName as string,
     userId: (body.userId as string) || null,
     slackUserId: (body.slackUserId as string) || null,
-    ntfyTopic: (body.ntfyTopic as string) || null,
+    ntfyTopic: generateNtfyTopic(),
     role: (body.role as "admin" | "member") || "member",
   });
   return c.redirect(`/app/teams/${c.req.param("id")}`);

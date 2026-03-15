@@ -1,3 +1,12 @@
+/** Generate a unique ntfy topic with a yawpr prefix + 16 random hex chars */
+export function generateNtfyTopic(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  const hex = Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return `yawpr-${hex}`;
+}
+
 /** Verify Slack request signature using Web Crypto API */
 export async function verifySlackSignature(
   signingSecret: string,
