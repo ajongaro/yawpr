@@ -30,17 +30,17 @@ export const MarketingHomePage: FC = () => {
             <div class="step">
               <div class="step-number">1</div>
               <div>
-                <strong>Admin signs in once</strong>
-                <p>Sign in with Slack, name your group, connect the bot. One-time setup.</p>
+                <strong>One person connects the bot</strong>
+                <p>Sign in with Slack, name your group. Done in 60 seconds.</p>
               </div>
             </div>
             <div class="step">
               <div class="step-number">2</div>
               <div>
-                <strong>Build your teams in Slack</strong>
+                <strong>Set up teams from Slack</strong>
                 <p>
-                  <code>/yawp setup</code> — pick members, they get a DM
-                  with push notification setup. No one else touches the website.
+                  <code>/yawp setup</code> — everyone you add gets a DM
+                  with push notification setup. Nobody visits a website.
                 </p>
               </div>
             </div>
@@ -49,8 +49,8 @@ export const MarketingHomePage: FC = () => {
               <div>
                 <strong>Fire when it matters</strong>
                 <p>
-                  <code>/yawp fire</code> — the team's phones go off.
-                  No response in 15 min? Auto-escalates to the full team.
+                  <code>/yawp fire</code> — phones go off, even on silent.
+                  No response in 15 min? Auto-escalates.
                 </p>
               </div>
             </div>
