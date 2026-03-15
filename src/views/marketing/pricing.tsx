@@ -49,7 +49,7 @@ export const PricingPage: FC = () => {
               </ul>
               <form method="post" action="/api/checkout">
                 <button type="submit" class="btn btn-primary btn-lg pricing-cta">
-                  Contact Sales
+                  Subscribe
                 </button>
               </form>
             </div>
