@@ -16,7 +16,7 @@ export const PricingPage: FC = () => {
               <div class="pricing-header">
                 <h3>Free</h3>
                 <div class="pricing-price">$0</div>
-                <p>Exclusively for Gambyt employees. You know who you are.</p>
+                <p>Exclusively for Gambyt employees.</p>
               </div>
               <ul class="pricing-features">
                 <li>Unlimited teams</li>
