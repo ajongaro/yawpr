@@ -47,9 +47,11 @@ export const PricingPage: FC = () => {
                 <li>Custom webhook parsers</li>
                 <li>A personal thank-you call from the founder</li>
               </ul>
-              <a href="/app/login" class="btn btn-primary btn-lg pricing-cta">
-                Start Free Trial
-              </a>
+              <form method="post" action="/api/checkout">
+                <button type="submit" class="btn btn-primary btn-lg pricing-cta">
+                  Subscribe
+                </button>
+              </form>
             </div>
           </div>
         </div>

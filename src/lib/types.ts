@@ -11,6 +11,8 @@ export type Env = {
     ENCRYPTION_KEY: string;
     SLACK_SIGNING_SECRET: string;
     NTFY_BASE_URL: string;
+    STRIPE_SECRET_KEY: string;
+    STRIPE_PRICE_ID: string;
   };
   Variables: {
     user: { id: string; name: string; email: string; image?: string };

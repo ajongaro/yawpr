@@ -10,6 +10,7 @@ import { slackInstall } from "./routes/slack/install";
 import { slackCommands } from "./routes/slack/commands";
 import { slackInteractions } from "./routes/slack/interactions";
 import { webhookIngest } from "./routes/webhooks/ingest";
+import { checkoutApi } from "./routes/api/checkout";
 import { marketing } from "./routes/marketing";
 import { pages } from "./routes/pages";
 import { authGuard } from "./middleware/auth";
@@ -33,6 +34,7 @@ app.use("/api/schedules/*", authGuard);
 app.route("/api/teams", teamsApi);
 app.route("/api/incidents", incidentsApi);
 app.route("/api/schedules", schedulesApi);
+app.route("/api/checkout", checkoutApi);
 
 // ─── Slack routes (commands/interactions before install — install has authGuard wildcard)
 app.route("/slack/commands", slackCommands);
