@@ -454,6 +454,36 @@ slackInteractions.post("/", async (c) => {
         : "ℹ️";
 
   if (action.action_id === "ack_incident") {
+    // For info/warning, ack also resolves (less noise)
+    if (incident.severity === "info" || incident.severity === "warning") {
+      await acknowledgeIncident(db, orgId, incidentId, actorId);
+      await resolveIncident(db, orgId, incidentId, actorId, "Auto-resolved on acknowledgment");
+
+      return c.json({
+        replace_original: true,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `~${emoji} *${incident.title}*~`,
+            },
+          },
+          {
+            type: "context",
+            elements: [
+              {
+                type: "mrkdwn",
+                text: `Acknowledged & resolved by <@${slackUserId}> | <${c.env.APP_URL}/app/incidents/${incidentId}|View in dashboard>`,
+              },
+            ],
+          },
+        ],
+        text: `${emoji} ${incident.title} — acknowledged & resolved by <@${slackUserId}>`,
+      });
+    }
+
+    // Fire severity — ack only, requires explicit resolve
     await acknowledgeIncident(db, orgId, incidentId, actorId);
 
     return c.json({

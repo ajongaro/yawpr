@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, and, desc, ne } from "drizzle-orm";
+import { eq, and, desc, ne, gte } from "drizzle-orm";
 import type { Env } from "../../lib/types";
 import { slackVerify } from "../../middleware/slack-verify";
 import { getDb } from "../../db/client";
@@ -49,6 +49,7 @@ slackCommands.post("/", async (c) => {
         "`/yawp fire @slug <message>` — Quick-fire an incident",
         "`/yawp status` — Show active incidents",
         "`/yawp history` — Recent incident history",
+        "`/yawp stats` — Response time metrics",
         "",
         "*Account*",
         "`/yawp mytopic` — DM yourself your ntfy push notification topic",
@@ -158,6 +159,70 @@ slackCommands.post("/", async (c) => {
     return c.json({
       response_type: "ephemeral",
       text: `Opening *${team.name}* management...`,
+    });
+  }
+
+  // ─── /yawp stats — response time metrics ────────────────
+  if (subcommand === "stats") {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const allIncidents = await db
+      .select()
+      .from(incidents)
+      .where(
+        and(
+          eq(incidents.orgId, orgId),
+          gte(incidents.createdAt, thirtyDaysAgo)
+        )
+      );
+
+    if (allIncidents.length === 0) {
+      return c.json({
+        response_type: "ephemeral",
+        text: "No incidents in the last 30 days.",
+      });
+    }
+
+    const total = allIncidents.length;
+    const resolved = allIncidents.filter((i) => i.status === "resolved").length;
+    const active = allIncidents.filter((i) => i.status === "active").length;
+
+    // Avg time to ack (for incidents that were acknowledged)
+    const ackTimes = allIncidents
+      .filter((i) => i.acknowledgedAt && i.createdAt)
+      .map((i) => i.acknowledgedAt!.getTime() - i.createdAt.getTime());
+    const avgAckMin = ackTimes.length > 0
+      ? Math.round(ackTimes.reduce((a, b) => a + b, 0) / ackTimes.length / 60000)
+      : null;
+
+    // Avg time to resolve (for resolved incidents)
+    const resolveTimes = allIncidents
+      .filter((i) => i.resolvedAt && i.createdAt)
+      .map((i) => i.resolvedAt!.getTime() - i.createdAt.getTime());
+    const avgResolveMin = resolveTimes.length > 0
+      ? Math.round(resolveTimes.reduce((a, b) => a + b, 0) / resolveTimes.length / 60000)
+      : null;
+
+    // By severity
+    const fires = allIncidents.filter((i) => i.severity === "fire").length;
+    const warnings = allIncidents.filter((i) => i.severity === "warning").length;
+    const infos = allIncidents.filter((i) => i.severity === "info").length;
+
+    const lines = [
+      `*Last 30 days:*`,
+      `${total} incidents (${fires} fire, ${warnings} warning, ${infos} info)`,
+      `${resolved} resolved, ${active} still active`,
+      "",
+      avgAckMin !== null
+        ? `Avg time to ack: *${avgAckMin} min*`
+        : "Avg time to ack: _no data_",
+      avgResolveMin !== null
+        ? `Avg time to resolve: *${avgResolveMin} min*`
+        : "Avg time to resolve: _no data_",
+    ];
+
+    return c.json({
+      response_type: "ephemeral",
+      text: lines.join("\n"),
     });
   }
 

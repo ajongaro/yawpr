@@ -5,6 +5,7 @@ type ParsedWebhook = {
   title: string;
   description: string;
   dedupKey?: string;
+  resolved?: boolean;
 };
 
 /** Parse a Datadog webhook payload */
@@ -42,7 +43,9 @@ export function parseDatadog(
         ? `datadog:${data.id}`
         : undefined;
 
-    return { severity, title, description, dedupKey };
+    const resolved = alertType === "success" || alertType === "recovery";
+
+    return { severity, title, description, dedupKey, resolved };
   } catch {
     return null;
   }

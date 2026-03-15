@@ -1,9 +1,11 @@
 import { Hono } from "hono";
+import { eq, and, ne } from "drizzle-orm";
 import type { Env } from "../../lib/types";
 import type { IncidentSeverity } from "../../lib/types";
 import { webhookVerify } from "../../middleware/webhook-verify";
 import { getDb } from "../../db/client";
-import { createIncident } from "../../services/incident";
+import { incidents } from "../../db/schema";
+import { createIncident, resolveIncident } from "../../services/incident";
 import { parseCloudWatch } from "./parsers/cloudwatch";
 import { parseDatadog } from "./parsers/datadog";
 import { parseGeneric } from "./parsers/generic";
@@ -32,7 +34,7 @@ webhookIngest.post("/:sourceId/ingest", webhookVerify, async (c) => {
   const defaultSeverity = source.severityDefault as IncidentSeverity;
 
   // Parse based on source type
-  let parsed: { severity: IncidentSeverity; title: string; description: string; dedupKey?: string } | null = null;
+  let parsed: { severity: IncidentSeverity; title: string; description: string; dedupKey?: string; resolved?: boolean } | null = null;
 
   switch (source.sourceType) {
     case "cloudwatch":
@@ -56,6 +58,35 @@ webhookIngest.post("/:sourceId/ingest", webhookVerify, async (c) => {
   }
 
   const db = getDb(c.env.DB);
+
+  // Auto-resolve: if the webhook signals resolution and we have a dedup key,
+  // find and resolve the matching active incident
+  if (parsed.resolved && parsed.dedupKey) {
+    const [existing] = await db
+      .select()
+      .from(incidents)
+      .where(
+        and(
+          eq(incidents.orgId, source.orgId),
+          eq(incidents.dedupKey, parsed.dedupKey),
+          ne(incidents.status, "resolved")
+        )
+      );
+
+    if (existing) {
+      await resolveIncident(
+        db,
+        source.orgId,
+        existing.id,
+        `webhook:${source.id}`,
+        "Auto-resolved by monitoring tool"
+      );
+      return c.json({ ok: true, resolved: existing.id });
+    }
+
+    // No matching incident to resolve — nothing to do
+    return c.json({ ok: true, message: "No active incident to resolve" });
+  }
 
   const incident = await createIncident(
     db,

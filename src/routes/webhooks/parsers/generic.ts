@@ -5,6 +5,7 @@ type ParsedWebhook = {
   title: string;
   description: string;
   dedupKey?: string;
+  resolved?: boolean;
 };
 
 const VALID_SEVERITIES = new Set(["fire", "warning", "info"]);
@@ -35,7 +36,9 @@ export function parseGeneric(
       ? `generic:${data.dedup_key}`
       : undefined;
 
-    return { severity, title, description, dedupKey };
+    const resolved = data.status === "resolved" || data.resolved === true;
+
+    return { severity, title, description, dedupKey, resolved };
   } catch {
     return null;
   }
