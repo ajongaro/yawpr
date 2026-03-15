@@ -367,11 +367,7 @@ dd { font-size: 0.9rem; }
   text-align: center;
 }
 .hero-compact {
-  padding: 3rem 1.5rem 2rem;
-}
-.hero-compact .steps {
-  margin-top: 2.5rem;
-  text-align: left;
+  padding: 2.5rem 1.5rem 2rem;
 }
 .hero-title {
   font-size: 2.75rem;
@@ -487,6 +483,9 @@ dd { font-size: 0.9rem; }
   background: var(--surface);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
+}
+.how-section-compact {
+  padding: 2rem 1.5rem 2.5rem;
 }
 .steps {
   display: flex;

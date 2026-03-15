@@ -5,7 +5,7 @@ export const MarketingHomePage: FC = () => {
   return (
     <MarketingLayout>
       <section class="hero hero-compact">
-        <div class="container content-narrow">
+        <div class="container">
           <h1 class="hero-title">
             Mute everything.
             <br />
@@ -15,10 +15,17 @@ export const MarketingHomePage: FC = () => {
             When something breaks, your phone lights up — even on Do Not
             Disturb. Everything else can wait.
           </p>
-          <a href="/app/login" class="btn btn-primary btn-lg">
-            Sign in with Slack
-          </a>
+          <div class="hero-actions">
+            <a href="/app/login" class="btn btn-primary btn-lg">
+              Sign in with Slack
+            </a>
+          </div>
+        </div>
+      </section>
 
+      <section class="how-section how-section-compact">
+        <div class="container content-narrow">
+          <h2 class="section-title">Set up in 2 minutes</h2>
           <div class="steps">
             <div class="step">
               <div class="step-number">1</div>
