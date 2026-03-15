@@ -180,15 +180,6 @@ pages.post("/yawp", async (c) => {
     return c.text("Monthly limit reached", 402);
   }
 
-  let botToken: string | undefined;
-  const [installation] = await db
-    .select()
-    .from(slackInstallations)
-    .where(eq(slackInstallations.orgId, orgId));
-  if (installation) {
-    botToken = await decryptSecret(installation.botToken, c.env.ENCRYPTION_KEY);
-  }
-
   await createIncident(db, c.env.NOTIFICATION_QUEUE, c.env.APP_URL, {
     orgId,
     teamId: body.teamId as string,
@@ -196,7 +187,6 @@ pages.post("/yawp", async (c) => {
     title: body.title as string,
     source: "web",
     createdBy: user?.id,
-    botToken,
   });
 
   return c.redirect("/app");
@@ -275,16 +265,6 @@ pages.post("/incidents", async (c) => {
     return c.text("Monthly incident limit reached", 402);
   }
 
-  // Get bot token if Slack connected
-  let botToken: string | undefined;
-  const [installation] = await db
-    .select()
-    .from(slackInstallations)
-    .where(eq(slackInstallations.orgId, orgId));
-  if (installation) {
-    botToken = await decryptSecret(installation.botToken, c.env.ENCRYPTION_KEY);
-  }
-
   const incident = await createIncident(
     db,
     c.env.NOTIFICATION_QUEUE,
@@ -298,7 +278,6 @@ pages.post("/incidents", async (c) => {
       description: (body.description as string) || undefined,
       source: "web",
       createdBy: user?.id,
-      botToken,
     }
   );
 
@@ -514,6 +493,7 @@ pages.get("/webhooks", async (c) => {
       appUrl={c.env.APP_URL}
       sources={sources}
       teams={allTeams}
+      createdSecret={c.req.query("created_secret")}
     />
   );
 });
@@ -535,7 +515,7 @@ pages.post("/webhooks", async (c) => {
     severityDefault: (body.severityDefault as any) || "warning",
   });
 
-  return c.redirect("/app/webhooks");
+  return c.redirect(`/app/webhooks?created_secret=${encodeURIComponent(secret)}`);
 });
 
 pages.post("/webhooks/:id/delete", async (c) => {

@@ -21,6 +21,7 @@ type WebhooksPageProps = {
   appUrl: string;
   sources: WebhookSource[];
   teams: Team[];
+  createdSecret?: string;
 };
 
 export const WebhooksPage: FC<WebhooksPageProps> = ({
@@ -29,12 +30,23 @@ export const WebhooksPage: FC<WebhooksPageProps> = ({
   appUrl,
   sources,
   teams,
+  createdSecret,
 }) => {
   return (
     <Layout title="Webhooks" user={user} orgName={orgName}>
       <div class="page-header">
         <h1>Webhook Sources</h1>
       </div>
+
+      {createdSecret && (
+        <div class="card" style="border-left: 3px solid var(--warning-color); margin-bottom: 1.5rem;">
+          <p><strong>Webhook created!</strong> Copy this signing secret now — it won't be shown again:</p>
+          <code style="word-break: break-all;">{createdSecret}</code>
+          <p class="text-muted" style="margin-top: 0.5rem; font-size: 0.85rem;">
+            Include this in the <code>X-Signature-256</code> header as an HMAC-SHA256 signature of the request body.
+          </p>
+        </div>
+      )}
 
       <form method="post" action="/app/webhooks" class="form">
         <div class="form-row">

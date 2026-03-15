@@ -1,11 +1,26 @@
 import { eq, and } from "drizzle-orm";
 import { getDb } from "../db/client";
-import { notifications, incidents, incidentEvents } from "../db/schema";
+import { notifications, incidents, incidentEvents, slackInstallations } from "../db/schema";
 import { sendSlackDM, buildIncidentBlocks } from "../services/slack";
 import { publishNtfy } from "../services/ntfy";
+import { decryptSecret } from "../lib/crypto";
 import { enqueueNotifications } from "../services/notify";
 import type { NotificationMessage, EscalationCheck, QueueMessage, Env } from "../lib/types";
 import { SEVERITY_EMOJI } from "../lib/constants";
+
+/** Look up and decrypt bot token for an org */
+async function getBotToken(
+  db: ReturnType<typeof getDb>,
+  orgId: string,
+  encryptionKey: string
+): Promise<string | null> {
+  const [installation] = await db
+    .select()
+    .from(slackInstallations)
+    .where(eq(slackInstallations.orgId, orgId));
+  if (!installation) return null;
+  return decryptSecret(installation.botToken, encryptionKey);
+}
 
 export async function handleNotificationQueue(
   batch: MessageBatch<QueueMessage>,
@@ -20,14 +35,12 @@ export async function handleNotificationQueue(
     if (!Array.isArray(body) && body.type === "escalation_check") {
       const check = body as EscalationCheck;
       try {
-        // Look up the incident — only escalate if still unacknowledged
         const [incident] = await db
           .select()
           .from(incidents)
           .where(eq(incidents.id, check.incidentId));
 
         if (incident && incident.status === "active") {
-          // Escalate: send notifications to the escalation team
           await enqueueNotifications(
             db,
             env.NOTIFICATION_QUEUE,
@@ -37,8 +50,7 @@ export async function handleNotificationQueue(
             `[ESCALATED] ${check.title}`,
             `No acknowledgment after 15 minutes. Escalating to full team.`,
             check.severity,
-            check.incidentUrl,
-            check.botToken
+            check.incidentUrl
           );
 
           await db.insert(incidentEvents).values({
@@ -58,9 +70,15 @@ export async function handleNotificationQueue(
     // ─── Notification messages ────────────────────────
     const notifList = body as NotificationMessage[];
 
+    // Look up bot token once for this batch of notifications
+    let botToken: string | null = null;
+    if (notifList.length > 0) {
+      botToken = await getBotToken(db, notifList[0].orgId, env.ENCRYPTION_KEY);
+    }
+
     for (const notif of notifList) {
       try {
-        if (notif.channel === "slack_dm" && notif.slackUserId && notif.botToken) {
+        if (notif.channel === "slack_dm" && notif.slackUserId && botToken) {
           const blocks = buildIncidentBlocks(
             notif.title,
             notif.body,
@@ -70,7 +88,7 @@ export async function handleNotificationQueue(
           );
           const emoji = SEVERITY_EMOJI[notif.severity] || "ℹ️";
           await sendSlackDM(
-            notif.botToken,
+            botToken,
             notif.slackUserId,
             `${emoji} ${notif.title}: ${notif.body}`,
             blocks
@@ -86,7 +104,6 @@ export async function handleNotificationQueue(
           );
         }
 
-        // Mark as sent
         await db
           .update(notifications)
           .set({ status: "sent", sentAt: new Date() })

@@ -195,8 +195,6 @@ slackCommands.post("/", async (c) => {
       });
     }
 
-    const botToken = await getBotToken();
-
     const incident = await createIncident(
       db,
       c.env.NOTIFICATION_QUEUE,
@@ -208,7 +206,6 @@ slackCommands.post("/", async (c) => {
         title,
         source: "slack",
         createdBy: userId,
-        botToken,
       }
     );
 

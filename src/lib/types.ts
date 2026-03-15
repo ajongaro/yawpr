@@ -45,7 +45,6 @@ export type NotificationMessage = {
   slackUserId?: string;
   ntfyTopic?: string;
   pushToken?: string;
-  botToken?: string;
   title: string;
   body: string;
   severity: IncidentSeverity;
@@ -57,7 +56,6 @@ export type EscalationCheck = {
   incidentId: string;
   orgId: string;
   escalateToTeamId: string;
-  botToken: string;
   title: string;
   severity: IncidentSeverity;
   incidentUrl: string;

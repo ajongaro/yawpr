@@ -36,7 +36,7 @@ export async function verifySlackSignature(
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-  return timingSafeEqual(computed, signature);
+  return await timingSafeEqual(computed, signature);
 }
 
 /** Verify HMAC-SHA256 for webhook payloads */
@@ -64,15 +64,25 @@ export async function verifyHmacSignature(
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
-  return timingSafeEqual(computed, signature);
+  return await timingSafeEqual(computed, signature);
 }
 
-/** Constant-time string comparison */
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
+/** Constant-time string comparison using HMAC to normalize length */
+async function timingSafeEqual(a: string, b: string): Promise<boolean> {
   const encoder = new TextEncoder();
-  const bufA = encoder.encode(a);
-  const bufB = encoder.encode(b);
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode("timing-safe-compare"),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const [macA, macB] = await Promise.all([
+    crypto.subtle.sign("HMAC", key, encoder.encode(a)),
+    crypto.subtle.sign("HMAC", key, encoder.encode(b)),
+  ]);
+  const bufA = new Uint8Array(macA);
+  const bufB = new Uint8Array(macB);
   let result = 0;
   for (let i = 0; i < bufA.length; i++) {
     result |= bufA[i] ^ bufB[i];
@@ -87,9 +97,13 @@ const IV_LENGTH = 12;
 
 async function deriveKey(encryptionKey: string): Promise<CryptoKey> {
   const encoder = new TextEncoder();
+  const keyBytes = encoder.encode(encryptionKey);
+  if (keyBytes.length < 32) {
+    throw new Error(`ENCRYPTION_KEY must be at least 32 bytes, got ${keyBytes.length}`);
+  }
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
-    encoder.encode(encryptionKey).slice(0, 32),
+    keyBytes.slice(0, 32),
     { name: ALGORITHM },
     false,
     ["encrypt", "decrypt"]

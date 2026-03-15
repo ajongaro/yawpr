@@ -53,7 +53,7 @@ slackInteractions.post("/", async (c) => {
         await handleTeamCreated(
           botToken,
           payload.view.id,
-          metadata.orgId,
+          installation.orgId,
           teamName,
           db
         )
@@ -74,7 +74,7 @@ slackInteractions.post("/", async (c) => {
       return c.json(
         await handleMembersSelected(
           botToken,
-          metadata.orgId,
+          installation.orgId,
           metadata.teamId,
           metadata.teamName,
           selectedUsers,
@@ -104,7 +104,7 @@ slackInteractions.post("/", async (c) => {
           .from(members)
           .where(
             and(
-              eq(members.orgId, metadata.orgId),
+              eq(members.orgId, installation.orgId),
               eq(members.teamId, metadata.teamId),
               eq(members.slackUserId, slackUserId)
             )
@@ -129,7 +129,7 @@ slackInteractions.post("/", async (c) => {
 
         const ntfyTopic = await getOrCreateNtfyTopic(db, slackUserId);
         await db.insert(members).values({
-          orgId: metadata.orgId,
+          orgId: installation.orgId,
           teamId: metadata.teamId,
           displayName,
           slackUserId,
@@ -179,7 +179,9 @@ slackInteractions.post("/", async (c) => {
         });
       }
 
-      await db.delete(members).where(eq(members.id, memberId));
+      await db.delete(members).where(
+        and(eq(members.id, memberId), eq(members.orgId, installation.orgId))
+      );
 
       return c.json({
         response_action: "update",
@@ -209,7 +211,7 @@ slackInteractions.post("/", async (c) => {
           escalateToTeamId: targetId === "none" ? null : targetId,
         })
         .where(
-          and(eq(teams.id, metadata.teamId), eq(teams.orgId, metadata.orgId))
+          and(eq(teams.id, metadata.teamId), eq(teams.orgId, installation.orgId))
         );
 
       const label = targetId === "none" ? "disabled" : "configured";
@@ -254,7 +256,7 @@ slackInteractions.post("/", async (c) => {
         .update(teams)
         .set({ name: newName, slug: newSlug })
         .where(
-          and(eq(teams.id, metadata.teamId), eq(teams.orgId, metadata.orgId))
+          and(eq(teams.id, metadata.teamId), eq(teams.orgId, installation.orgId))
         );
 
       return c.json({
@@ -283,14 +285,14 @@ slackInteractions.post("/", async (c) => {
         .delete(members)
         .where(
           and(
-            eq(members.orgId, metadata.orgId),
+            eq(members.orgId, installation.orgId),
             eq(members.teamId, metadata.teamId)
           )
         );
       await db
         .delete(teams)
         .where(
-          and(eq(teams.id, metadata.teamId), eq(teams.orgId, metadata.orgId))
+          and(eq(teams.id, metadata.teamId), eq(teams.orgId, installation.orgId))
         );
 
       return c.json({
@@ -337,13 +339,12 @@ slackInteractions.post("/", async (c) => {
         c.env.NOTIFICATION_QUEUE,
         c.env.APP_URL,
         {
-          orgId: metadata.orgId,
+          orgId: installation.orgId,
           teamId,
           severity: severity as "fire" | "warning" | "info",
           title,
           source: "slack",
           createdBy: payload.user.id,
-          botToken,
         }
       );
 
@@ -401,15 +402,15 @@ slackInteractions.post("/", async (c) => {
       const triggerId = payload.trigger_id;
 
       if (action.action_id === "team_add_members") {
-        await openAddMembersModal(botToken, triggerId, metadata.orgId, metadata.teamId);
+        await openAddMembersModal(botToken, triggerId, installation.orgId, metadata.teamId);
       } else if (action.action_id === "team_remove_member") {
-        await openRemoveMemberModal(botToken, triggerId, metadata.orgId, metadata.teamId, db);
+        await openRemoveMemberModal(botToken, triggerId, installation.orgId, metadata.teamId, db);
       } else if (action.action_id === "team_set_escalation") {
-        await openSetEscalationModal(botToken, triggerId, metadata.orgId, metadata.teamId, db);
+        await openSetEscalationModal(botToken, triggerId, installation.orgId, metadata.teamId, db);
       } else if (action.action_id === "team_rename") {
-        await openRenameTeamModal(botToken, triggerId, metadata.orgId, metadata.teamId, db);
+        await openRenameTeamModal(botToken, triggerId, installation.orgId, metadata.teamId, db);
       } else if (action.action_id === "team_delete") {
-        await openDeleteTeamModal(botToken, triggerId, metadata.orgId, metadata.teamId, db);
+        await openDeleteTeamModal(botToken, triggerId, installation.orgId, metadata.teamId, db);
       }
 
       return c.json({ ok: true });

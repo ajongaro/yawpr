@@ -4,14 +4,13 @@ import { z } from "zod";
 import { eq, and, desc } from "drizzle-orm";
 import type { Env } from "../../lib/types";
 import { getDb } from "../../db/client";
-import { incidents, incidentEvents, slackInstallations } from "../../db/schema";
+import { incidents, incidentEvents } from "../../db/schema";
 import {
   createIncident,
   acknowledgeIncident,
   resolveIncident,
   addComment,
 } from "../../services/incident";
-import { decryptSecret } from "../../lib/crypto";
 import { checkIncidentLimit } from "../../middleware/limits";
 
 const incidentsApi = new Hono<Env>();
@@ -103,19 +102,6 @@ incidentsApi.post(
       );
     }
 
-    // Get bot token if Slack is connected
-    let botToken: string | undefined;
-    const [installation] = await db
-      .select()
-      .from(slackInstallations)
-      .where(eq(slackInstallations.orgId, orgId));
-    if (installation) {
-      botToken = await decryptSecret(
-        installation.botToken,
-        c.env.ENCRYPTION_KEY
-      );
-    }
-
     const incident = await createIncident(
       db,
       c.env.NOTIFICATION_QUEUE,
@@ -125,7 +111,6 @@ incidentsApi.post(
         orgId,
         source: "web",
         createdBy: user?.id,
-        botToken,
       }
     );
 

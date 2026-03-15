@@ -1,12 +1,9 @@
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
 import type { Env } from "../../lib/types";
 import type { IncidentSeverity } from "../../lib/types";
 import { webhookVerify } from "../../middleware/webhook-verify";
 import { getDb } from "../../db/client";
-import { slackInstallations } from "../../db/schema";
 import { createIncident } from "../../services/incident";
-import { decryptSecret } from "../../lib/crypto";
 import { parseCloudWatch } from "./parsers/cloudwatch";
 import { parseDatadog } from "./parsers/datadog";
 import { parseGeneric } from "./parsers/generic";
@@ -60,17 +57,6 @@ webhookIngest.post("/:sourceId/ingest", webhookVerify, async (c) => {
 
   const db = getDb(c.env.DB);
 
-  // Get bot token for notifications (if Slack is connected)
-  let botToken: string | undefined;
-  const [installation] = await db
-    .select()
-    .from(slackInstallations)
-    .where(eq(slackInstallations.orgId, source.orgId));
-
-  if (installation) {
-    botToken = await decryptSecret(installation.botToken, c.env.ENCRYPTION_KEY);
-  }
-
   const incident = await createIncident(
     db,
     c.env.NOTIFICATION_QUEUE,
@@ -83,7 +69,6 @@ webhookIngest.post("/:sourceId/ingest", webhookVerify, async (c) => {
       description: parsed.description,
       source: "webhook",
       createdBy: `webhook:${source.id}`,
-      botToken,
     }
   );
 

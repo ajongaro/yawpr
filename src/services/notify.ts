@@ -13,8 +13,7 @@ export async function enqueueNotifications(
   title: string,
   description: string,
   severity: IncidentSeverity,
-  incidentUrl: string,
-  botToken?: string
+  incidentUrl: string
 ) {
   const teamMembers = await db
     .select()
@@ -24,21 +23,19 @@ export async function enqueueNotifications(
   const messages: NotificationMessage[] = [];
 
   for (const member of teamMembers) {
-    // Slack DM if member has a Slack user ID and we have a bot token
-    if (member.slackUserId && botToken) {
-      const msg: NotificationMessage = {
+    // Slack DM if member has a Slack user ID
+    if (member.slackUserId) {
+      messages.push({
         incidentId,
         orgId,
         recipientId: member.id,
         channel: "slack_dm",
         slackUserId: member.slackUserId,
-        botToken,
         title,
         body: description || title,
         severity,
         incidentUrl,
-      };
-      messages.push(msg);
+      });
 
       await db.insert(notifications).values({
         orgId,
@@ -51,7 +48,7 @@ export async function enqueueNotifications(
 
     // ntfy if member has a personal topic
     if (member.ntfyTopic) {
-      const msg: NotificationMessage = {
+      messages.push({
         incidentId,
         orgId,
         recipientId: member.id,
@@ -61,8 +58,7 @@ export async function enqueueNotifications(
         body: description || title,
         severity,
         incidentUrl,
-      };
-      messages.push(msg);
+      });
 
       await db.insert(notifications).values({
         orgId,

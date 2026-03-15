@@ -89,13 +89,7 @@ export const TeamDetailPage: FC<TeamDetailPageProps> = ({
                 <tr>
                   <td>{m.displayName}</td>
                   <td>{m.slackUserId || "—"}</td>
-                  <td>
-                    {m.ntfyTopic ? (
-                      <code class="ntfy-topic">{m.ntfyTopic}</code>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
+                  <td>{m.ntfyTopic ? "Configured" : "—"}</td>
                   <td>{m.role}</td>
                   <td>
                     <form

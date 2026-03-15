@@ -12,7 +12,6 @@ type CreateIncidentInput = {
   description?: string;
   source: IncidentSource;
   createdBy?: string;
-  botToken?: string;
 };
 
 export async function createIncident(
@@ -51,8 +50,7 @@ export async function createIncident(
     input.title,
     input.description || "",
     input.severity,
-    incidentUrl,
-    input.botToken
+    incidentUrl
   );
 
   // If the team has an escalation target, schedule an escalation check
@@ -61,18 +59,17 @@ export async function createIncident(
     .from(teams)
     .where(eq(teams.id, input.teamId));
 
-  if (team?.escalateToTeamId && input.botToken) {
+  if (team?.escalateToTeamId) {
     const escalation: EscalationCheck = {
       type: "escalation_check",
       incidentId: incident.id,
       orgId: input.orgId,
       escalateToTeamId: team.escalateToTeamId,
-      botToken: input.botToken,
       title: input.title,
       severity: input.severity,
       incidentUrl,
     };
-    await queue.send(escalation, { delaySeconds: 900 }); // 15 minutes
+    await queue.send(escalation, { delaySeconds: 900 });
   }
 
   return incident;
