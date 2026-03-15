@@ -9,6 +9,7 @@ Slack-first team alerting with push notifications that bypass Do Not Disturb.
 3. Members get a DM with push notification setup (ntfy app). They never touch the website.
 4. `/yawp fire @oncall DB is down` — phones go off
 5. No ack in 15 min? Auto-escalates to the full team
+6. Monitoring tools (CloudWatch, Datadog) auto-create and auto-resolve incidents via webhooks
 
 ## How On-Call Works
 
@@ -30,7 +31,17 @@ No scheduling. Use teams:
 /yawp fire @team msg            Quick-fire (no form)
 /yawp status                    Active incidents
 /yawp history                   Recent incidents
+/yawp stats                     30-day metrics (avg ack time, resolve time, counts)
+/yawp mytopic                   DM yourself your ntfy push notification topic
 ```
+
+## Key Behaviors
+
+- **Auto-escalation** — unacked incidents escalate to the full team after 15 min
+- **Auto-resolve on ack** — info/warning incidents resolve when acknowledged (one click). Fire incidents require explicit resolve.
+- **Incident deduplication** — repeated webhook alerts for the same alarm don't create duplicate incidents
+- **Auto-resolve from monitoring** — CloudWatch OK / Datadog recovery webhooks auto-resolve the matching incident
+- **Persistent ntfy topics** — each person has one topic forever, even across team changes
 
 ## Multi-Group Support
 
