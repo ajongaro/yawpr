@@ -169,18 +169,28 @@ export async function handleMembersSelected(
     memberResults.push({ displayName, slackUserId, ntfyTopic });
   }
 
-  // DM the person who ran setup with a summary
-  const topicLines = memberResults
-    .map((m) => `• <@${m.slackUserId}> → \`${m.ntfyTopic}\``)
+  // DM each member directly with their ntfy topic and setup instructions
+  for (const m of memberResults) {
+    await sendSlackDM(
+      botToken,
+      m.slackUserId,
+      `You've been added to Yawpr team *${teamName}*! When incidents hit, you'll get a Slack DM — but to also get push notifications on your phone:\n\n1. Download the *ntfy app*: <https://ntfy.sh|ntfy.sh> (iOS + Android)\n2. Open the app and tap *+* to subscribe\n3. Enter your personal topic: \`${m.ntfyTopic}\`\n\nThat's it — fire-level alerts will bypass Do Not Disturb.`
+    );
+  }
+
+  // DM the setup user a confirmation
+  const memberList = memberResults
+    .map((m) => `• <@${m.slackUserId}>`)
     .join("\n");
 
   await sendSlackDM(
     botToken,
     setupUserId,
-    `Team *${teamName}* is ready! Here are the ntfy topics for each member:\n\n${topicLines}\n\nEach person should subscribe to their topic in the <https://ntfy.sh|ntfy app> to get push notifications.`
+    `Team *${teamName}* is set up! I've DM'd each member with their ntfy setup instructions:\n\n${memberList}\n\nTo trigger an incident: \`/yawp fire @${teamName.toLowerCase().replace(/[^a-z0-9]+/g, "-")} Something is on fire\``
   );
 
   // Return an updated view showing success
+  const slug = teamName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   return {
     response_action: "update" as const,
     view: {
@@ -193,7 +203,7 @@ export async function handleMembersSelected(
           type: "section",
           text: {
             type: "mrkdwn",
-            text: `Team *${teamName}* is ready with ${memberResults.length} member${memberResults.length === 1 ? "" : "s"}.\n\nI've sent you a DM with everyone's ntfy topics.\n\nTo trigger an incident:\n\`/yawp fire @${teamName.toLowerCase().replace(/[^a-z0-9]+/g, "-")} Something is on fire\``,
+            text: `Team *${teamName}* is ready with ${memberResults.length} member${memberResults.length === 1 ? "" : "s"}.\n\nEach person just got a DM with instructions to set up ntfy push notifications on their phone.\n\nTo trigger an incident:\n\`/yawp fire @${slug} Something is on fire\``,
           },
         },
       ],
