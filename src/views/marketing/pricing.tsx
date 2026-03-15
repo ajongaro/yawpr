@@ -8,7 +8,7 @@ export const PricingPage: FC = () => {
         <div class="container">
           <h1 class="section-title">Simple Pricing</h1>
           <p class="section-subtitle">
-            Start free. Upgrade when you need more.
+            Two tiers. No negotiations.
           </p>
 
           <div class="pricing-grid">
@@ -16,56 +16,39 @@ export const PricingPage: FC = () => {
               <div class="pricing-header">
                 <h3>Free</h3>
                 <div class="pricing-price">$0</div>
-                <p>For small teams getting started</p>
+                <p>Exclusively for Gambyt employees. You know who you are.</p>
               </div>
               <ul class="pricing-features">
-                <li>5 teams</li>
-                <li>20 members per team</li>
-                <li>50 incidents / month</li>
+                <li>Unlimited teams</li>
+                <li>Unlimited members</li>
+                <li>Unlimited incidents</li>
                 <li>Slack integration</li>
                 <li>ntfy.sh notifications</li>
                 <li>Webhook ingestion</li>
+                <li>The warm feeling of being chosen</li>
               </ul>
               <a href="/app/login" class="btn btn-primary btn-lg pricing-cta">
-                Get Started
+                Sign In with Gambyt Slack
               </a>
             </div>
 
             <div class="pricing-card pricing-card-featured">
               <div class="pricing-header">
                 <h3>Pro</h3>
-                <div class="pricing-price">$29<span>/mo</span></div>
-                <p>For growing engineering orgs</p>
-              </div>
-              <ul class="pricing-features">
-                <li>25 teams</li>
-                <li>100 members per team</li>
-                <li>500 incidents / month</li>
-                <li>Everything in Free</li>
-                <li>Priority support</li>
-                <li>Custom webhook parsers</li>
-              </ul>
-              <a href="/app/login" class="btn btn-primary btn-lg pricing-cta">
-                Start Free Trial
-              </a>
-            </div>
-
-            <div class="pricing-card">
-              <div class="pricing-header">
-                <h3>Enterprise</h3>
-                <div class="pricing-price">Custom</div>
-                <p>For organizations with specific needs</p>
+                <div class="pricing-price">$1,000,000<span>/mo</span></div>
+                <p>For everyone else</p>
               </div>
               <ul class="pricing-features">
                 <li>Unlimited teams</li>
                 <li>Unlimited members</li>
                 <li>Unlimited incidents</li>
-                <li>Everything in Pro</li>
-                <li>SSO / SAML</li>
-                <li>Dedicated support</li>
+                <li>Everything in Free</li>
+                <li>Priority support</li>
+                <li>Custom webhook parsers</li>
+                <li>A personal thank-you call from the founder</li>
               </ul>
-              <a href="mailto:hello@yawpr.dev" class="btn btn-lg pricing-cta">
-                Contact Us
+              <a href="/app/login" class="btn btn-primary btn-lg pricing-cta">
+                Start Free Trial
               </a>
             </div>
           </div>
