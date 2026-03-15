@@ -187,34 +187,6 @@ export const members = sqliteTable(
   ]
 );
 
-// ─── Schedules ──────────────────────────────────────────
-export const schedules = sqliteTable(
-  "schedules",
-  {
-    id: text("id")
-      .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
-    orgId: text("org_id")
-      .notNull()
-      .references(() => organizations.id),
-    teamId: text("team_id")
-      .notNull()
-      .references(() => teams.id),
-    memberId: text("member_id")
-      .notNull()
-      .references(() => members.id),
-    startTime: integer("start_time", { mode: "timestamp" }).notNull(),
-    endTime: integer("end_time", { mode: "timestamp" }).notNull(),
-  },
-  (table) => [
-    index("idx_schedules_org_team").on(
-      table.orgId,
-      table.teamId,
-      table.startTime,
-      table.endTime
-    ),
-  ]
-);
 
 // ─── Incidents ──────────────────────────────────────────
 export const incidents = sqliteTable(

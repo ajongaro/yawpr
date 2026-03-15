@@ -260,7 +260,7 @@ export async function openDeleteTeamModal(
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `Are you sure you want to delete *${team.name}*?\n\nThis will remove ${memberCount} member${memberCount !== 1 ? "s" : ""}, all schedules, and cannot be undone.`,
+          text: `Are you sure you want to delete *${team.name}*?\n\nThis will remove ${memberCount} member${memberCount !== 1 ? "s" : ""} and cannot be undone.`,
         },
       },
     ],

@@ -38,7 +38,7 @@ Everything runs through `/yawp`:
 
 - **Slack-first** — setup, team management, scheduling, and incidents all through the `/yawp` bot
 - **Dual-channel alerts** — Slack DMs with interactive buttons + ntfy.sh push notifications
-- **Modal wizards** — team setup, incident triggering, on-call scheduling all use Slack modals
+- **Modal wizards** — team setup, incident triggering, and member management all use Slack modals
 - **Auto-generated ntfy topics** — each member gets a unique, private push notification topic
 - **On-call via teams** — create an `@oncall` team, move people in/out as needed
 - **Webhook ingestion** — CloudWatch, Datadog, or generic JSON webhooks auto-create incidents

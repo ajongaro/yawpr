@@ -42,7 +42,7 @@ slackCommands.post("/", async (c) => {
         "*Setup & Teams*",
         "`/yawp setup` — Create a new team (wizard)",
         "`/yawp teams` — List all teams",
-        "`/yawp team @slug` — Manage team (add/remove members, schedule, rename, delete)",
+        "`/yawp team @slug` — Manage team (add/remove members, rename, delete)",
         "",
         "*Incidents*",
         "`/yawp fire` — Trigger an incident (opens form)",
